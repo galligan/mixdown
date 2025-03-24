@@ -172,6 +172,8 @@ Ok, so this isn't the *most* minimal prompt example, but it does show a few thin
 
 ## ⌨️ Mixdown Syntax and Grammar
 
+A full reference for Mixdown's syntax and grammar can be found in [mixdown-syntax.md](./docs/mixdown-syntax.md).
+
 Mixdown's syntax sets up a structure for the prompt that is both human-readable and editable, and (most of the time) should be interpreted by the LLM as a single, cohesive prompt. Here's an overview its syntax and various elements.
 
 You can see some examples of Mixdown prompts in [EXAMPLES.md](./EXAMPLES.md) (still very much a work in progress).
