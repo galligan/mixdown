@@ -1,4 +1,4 @@
-# Mixdown: Markup for AI Prompting
+# 💽 Mixdown: Markup for AI Prompting
 
 Mixdown is a multi-syntax markup specification (for lack of a better term) designed for more effective and consistent AI prompting. It is designed to be:
 
