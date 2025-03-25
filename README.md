@@ -8,9 +8,56 @@ Mixdown is a multi-syntax markup specification (for lack of a better term) desig
 - 🚀 Usable immediately without any additional prompting or instructions in most cases
 - ✨ Most importantly, able to prompt LLMs to consistently and reliably produce the outputs you want
 
-## 📖 Overview
+This project is very much a work in progress, and the spec is subject to frequent changes. You can follow along with the latest changes in the [CHANGELOG.md](./CHANGELOG.md) file.
 
-### 💬 Motivation
+## Table of Contents
+
+- [Overview](#overview)
+  - [Motivation](#motivation)
+    - [Why the name Mixdown?](#why-the-name-mixdown)
+  - [A Sample Prompt](#a-sample-prompt)
+  - [What Mixdown is](#what-mixdown-is)
+  - [What Mixdown is not](#what-mixdown-is-not)
+  - [Why Mixdown?](#why-mixdown)
+- [Quick Start](#quick-start)
+  - [Quick Start: Minimal Prompt](#quick-start-minimal-prompt)
+  - [Quick Start: Detailed Prompt](#quick-start-detailed-prompt)
+- [Mixdown Syntax and Grammar](#mixdown-syntax-and-grammar)
+  - [1. The `<prompt>` Root Tag](#1-the-prompt-root-tag)
+  - [2. Including `<params>`](#2-including-params)
+  - [3. Using `<system>` and `<assistant>`](#3-using-system-and-assistant)
+  - [3.1 Adding a `<persona>`](#31-adding-a-persona)
+  - [4. Writing `<instructions>`](#4-writing-instructions)
+  - [5. Getting an output with `<output>` or `<response>`](#5-getting-an-output-with-output-or-response)
+  - [6. Using `placeholder` values in the `<params>` section](#6-using-placeholder-values-in-the-params-section)
+  - [7. Specifying a format for the output](#7-specifying-a-format-for-the-output)
+  - [8. Using examples](#8-using-examples)
+    - [8.1 Using examples for formatting, content direction, or other instructions](#81-using-examples-for-formatting-content-direction-or-other-instructions)
+    - [8.2 Example `kind` attribute](#82-example-kind-attribute)
+  - [9. Variable interpolation](#9-variable-interpolation)
+    - [9.1 Useful variables](#91-useful-variables)
+    - [9.2 Variables as "mad libs"](#92-variables-as-mad-libs)
+    - [9.3 Nesting variables within `<params>`](#93-nesting-variables-within-params)
+  - [10. Attributes](#10-attributes)
+  - [10.1 Attributes as `<params>`](#101-attributes-as-params)
+  - [10.2 Attributes as instructions](#102-attributes-as-instructions)
+  - [10.3 Attributes as output guidance](#103-attributes-as-output-guidance)
+- [Formatting Mixdown Documents](#formatting-mixdown-documents)
+  - [Indentation](#indentation)
+  - [The `<meta>` tag](#the-meta-tag)
+    - [Basic usage of `<meta>`](#basic-usage-of-meta)
+    - [Other uses of the `<meta>` tag](#other-uses-of-the-meta-tag)
+  - [The `<mixdown>` document tag](#the-mixdown-document-tag)
+- [Roadmap](#roadmap)
+  - [Todo](#todo)
+  - [Might do](#might-do)
+- [Questions](#questions)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Overview
+
+### Motivation
 
 I've been doing a lot of AI prompt engineering lately, and I've noticed a few things that have either been annoying or just not very effective. Lately though I've been trying out some new techniques for getting more consistent results, such as adding more structure to the prompts, using serializations for data, and more.
 
@@ -18,11 +65,11 @@ However, I've been running into a few issues in combining some of these techniqu
 
 So with that, I thought I'd try to create a markup specification that would combine the best of all that has worked for me so far. I'm calling it Mixdown.
 
-#### 🤔 Why the name Mixdown?
+#### Why the name Mixdown?
 
 In music production, a "[mixdown](https://en.wikipedia.org/wiki/Audio_mixing_(recorded_music))" refers to the process of combining all the individual tracks of a song recording into a single, cohesive final track. I liked the idea of referencing the "mix" of syntax formats, and the brilliant "markdown" name. Just to fit.
 
-### ✒️ A Sample Prompt
+### A Sample Prompt
 
 Here's a sample prompt using Mixdown. Feel free to copy it and paste it into an LLM, replacing the values in `<params>` with some of your own details to see how it works in practice. No need to give it any additional instruction, compile it, or anything else. Just paste it in and go.
 
@@ -80,31 +127,31 @@ Here's a sample prompt using Mixdown. Feel free to copy it and paste it into an 
 </prompt>
 ```
 
-### 👉 What Mixdown is
+### What Mixdown is
 
 Mixdown is a [pidgin](https://en.wikipedia.org/wiki/Pidgin)/hodgepodge/mashup multi-syntax markup specification of sorts. Maybe it's a language, maybe it's not. You could also just call it a technique or whatever floats your boat. For the purposes of this project, we'll call it a markup spec.
 
-- 🗃️ Uses **[XML-like tags](https://en.wikipedia.org/wiki/XML)** to structure the prompt and delineate logical sections (e.g. `<system>`, `<instructions>`, `<output>`, `<examples>`, etc.)
-- 💽 Uses **[YAML](https://en.wikipedia.org/wiki/YAML)** for structured data within a `<params>` section, perfect for defining parameters, options, or serialized data the prompt can reference
+- Uses **[XML-like tags](https://en.wikipedia.org/wiki/XML)** to structure the prompt and delineate logical sections (e.g. `<system>`, `<instructions>`, `<output>`, `<examples>`, etc.)
+- Uses **[YAML](https://en.wikipedia.org/wiki/YAML)** for structured data within a `<params>` section, perfect for defining parameters, options, or serialized data the prompt can reference
   - *Note*: You could use JSON or any other data serialization format, but I like YAML because it's easier to read and write for humans, and can take up less tokens
 - 📝 Uses **[Markdown](https://en.wikipedia.org/wiki/Markdown)** for expressing content, writing narrative prose, and formatting directions, so they remain human-readable and editable
 
-### ☝️ What Mixdown is not
+### What Mixdown is not
 
 - ❌ A general-purpose markup language
 - ❌ A direct replacement for Markdown, XML, JSON, YAML, or any other markup languages or formats
 - ❌ Claiming to be anything more than an intentionally formed technique for effective AI prompting
 
-### 🤔 Why Mixdown?
+### Why Mixdown?
 
-- 🔍 **Clarity**: Breaking things up into context, instructions, examples, and parameters makes everything way less confusing. When each part of your prompt has a clear label, both humans and AI models can understand what you're asking for much more easily.
-- 🧩 **Modularity**: Mix and match! Reuse parts of your prompts or just swap out the parameters when you need something different. Keep your main prompt the same and just tweak the `<params>` section - super convenient!
-- 🔄 **Maintainability**: Version control for prompts gets way easier with a formal structure. When you're comparing different versions, it's super simple to spot changes because they're neatly tucked into specific sections (like when you've only updated examples or tweaked instructions).
-- 🤠 **Expressiveness**: We mix and match different formats to get the best of each world - YAML for data and variables, Markdown for writing and formatting text, and XML tags to keep everything organized. Each have their own strengths and weaknesses, but together they're a powerful (if unconventional) combination.
-- 🛠️ **Flexibility**: Mixdown is designed to be progressively adopted, meaning you can use as much or as little of it as you want, depending on your needs. It's not a one-size-fits-all solution, but rather a tool that can be tailored to your specific prompting needs.
-- 🔌 **Compatibility**: Mixdown is compatible with all the major LLMs out of the box. It's designed to be a drop-in replacement for your existing prompting technique, so you can start using it right away without any additional setup or learning. The approach can be adapted into existing workflows - you can parse a Mixdown file to assemble the final prompt text for an API call, or even paste the entire prompt into an LLM with no need to give it any additional instructions or configuration.
+- **Clarity**: Breaking things up into context, instructions, examples, and parameters makes everything way less confusing. When each part of your prompt has a clear label, both humans and AI models can understand what you're asking for much more easily.
+- **Modularity**: Mix and match! Reuse parts of your prompts or just swap out the parameters when you need something different. Keep your main prompt the same and just tweak the `<params>` section - super convenient!
+- **Maintainability**: Version control for prompts gets way easier with a formal structure. When you're comparing different versions, it's super simple to spot changes because they're neatly tucked into specific sections (like when you've only updated examples or tweaked instructions).
+- **Expressiveness**: We mix and match different formats to get the best of each world - YAML for data and variables, Markdown for writing and formatting text, and XML tags to keep everything organized. Each have their own strengths and weaknesses, but together they're a powerful (if unconventional) combination.
+- **Flexibility**: Mixdown is designed to be progressively adopted, meaning you can use as much or as little of it as you want, depending on your needs. It's not a one-size-fits-all solution, but rather a tool that can be tailored to your specific prompting needs.
+- **Compatibility**: Mixdown is compatible with all the major LLMs out of the box. It's designed to be a drop-in replacement for your existing prompting technique, so you can start using it right away without any additional setup or learning. The approach can be adapted into existing workflows - you can parse a Mixdown file to assemble the final prompt text for an API call, or even paste the entire prompt into an LLM with no need to give it any additional instructions or configuration.
 
-## ✨ Quick Start
+## Quick Start
 
 ### Quick Start: Minimal Prompt
 
@@ -114,7 +161,11 @@ assistant: Tron
 user_name: Kevin Flynn
 game_type: text-based, interactive
 </params>
-<system>You are a friendly program named {{ assistant }} who helps users</system>
+
+<system>
+You are a friendly program named {{ assistant }} who helps users
+</system>
+
 <instructions are="below" />
 Greet the user, {{ user_name }}, and offer to play a {{ game_type }} game.
 ```
@@ -170,7 +221,7 @@ Ok, so this isn't the *most* minimal prompt example, but it does show a few thin
 3. Paste the result into the LLM of your choice and see what happens.
 4. *Bonus*: If you'd like to add some additional metadata to the file, such as version, author, date, etc., follow the instructions at [Mixdown Metadata](#the-meta-tag).
 
-## ⌨️ Mixdown Syntax and Grammar
+## Mixdown Syntax and Grammar
 
 A full reference for Mixdown's syntax and grammar can be found in [mixdown-syntax.md](./docs/mixdown-syntax.md).
 
@@ -496,25 +547,56 @@ Within an `<examples>` section:
 </examples>
 ```
 
-#### 8.2 Using examples to express correctness
+#### 8.2 Example `kind` attribute
 
-Oftentimes it's helpful to provide examples for the LLM to understand what kind of response is correct or incorrect. This can be done by including an `output` attribute on the `<example>` tag.
+Oftentimes it's helpful to provide examples for the LLM to understand how to consider and judge the nature of a response. This can be done by including an `kind` attribute on the `<example>` tag.
+
+Values for `kind` include, but are not limited to:
+
+- Expressions of correctness:
+  - `correct`: The response is correct
+  - `incorrect`: The response is incorrect
+- Expressions of quality:
+  - `great`: The response is great
+  - `good`: The response is good
+  - `ok`: The response is ok
+  - `bad`: The response is bad
+- Expressions of clarity:
+  - `clear`: The response is clear
+  - `confusing`: The response is confusing
+  - `ambiguous`: The response is ambiguous
+- Expressions of completeness:
+  - `complete`: The response is complete
+  - `incomplete`: The response is incomplete
+- Expressions of accuracy:
+  - `accurate`: The response is accurate
+  - `partially accurate`: The response is partially accurate
+  - `misleading`: The response is misleading
+  - `inaccurate`: The response is inaccurate
+- Expressions of style:
+  - `casual`: The response is casual
+  - `formal`: The response is formal
+  - `technical`: The response is technical
+  - `creative`: The response is creative
+  - `humorous`: The response is humorous
+
+**Examples**:
 
 ```xml
 <examples>
-  <example output="correct">
+  <example kind="correct">
     <input>What is 2 + 2?</input>
     <output>4</output>
   </example>
-  <example output="correct">
+  <example kind="correct">
     <input>What is the capital of France?</input>
     <output>Paris</output>
   </example>
-  <example output="incorrect">
+  <example kind="incorrect">
     <input>What is 2 + 2?</input>
     <output>5</output>
   </example>
-  <example output="incorrect">
+  <example kind="incorrect">
     <input>What is the capital of France?</input>
     <output>Chicago</output>
   </example>
@@ -673,11 +755,90 @@ Attributes can be used within `<params>`, `<sections>`, and `{{ }}` variables to
   - `format="json"`: Structure this content as valid JSON.
   - `format="yaml"`: Structure this content as valid YAML.
 
-## 🎨 Optional stuff
+## Formatting Mixdown Documents
+
+Mixdown documents can be formatted in a few different ways, depending upon your preference or needs.
+
+### Indentation
+
+With the exception of YAML-formatted sections, which use indentation to define structure, you can handle indentation as you see fit.
+
+**Flat indentation**:
+
+- Sections and section content are on the same level of indentation (no spaces)
+- Use empty lines between sections and content to make the document more readable
+- *Note*: Code folding tools may not work as expected with this formatting
+
+```xml
+<prompt>
+
+<!-- Params in YAML must still be indented within the tag -->
+<params>
+  system:
+    - You are a helpful assistant
+</params>
+
+<!-- Top-level section -->
+<section>
+
+<!-- Nested section -->
+<section>
+<!-- ... -->
+</section>
+
+</section>
+
+<!-- rest of the prompt -->
+
+</prompt>
+```
+
+**Nested indentation**:
+
+- Nested sections are indented with two spaces
+- You can use empty lines between sections for readability, but it's not required
+
+```xml
+<prompt>
+  <params>
+    <!-- Params in YAML must still be indented within the tag -->
+  </params>
+  <!-- Top-level section -->
+  <section>
+  <!-- Nested section -->
+    <section>
+      <!-- ... -->
+    </section>
+  </section>
+<!-- rest of the prompt -->
+</prompt>
+```
 
 ### The `<meta>` tag
 
-A `meta` tag is a great place to include metadata, specifically about the prompt itself.
+A `<meta>` tag is where you can store metadata about the Mixdown document or prompt. You can decide where to place it, and what metadata to include.
+
+#### Basic usage of `<meta>`
+
+**Placement of the `<meta>` tag**:
+
+- Within the `<mixdown>` document tag, where it will be the top-level metadata for the prompt contained within
+- Within a `<prompt>` tag, where it will be the metadata for the specific prompt
+  - This can be useful for when you don't have a top-level `<mixdown>` tag
+  - *Note*: This is not yet defined in the spec, but this would open the possibility of a `<mixdown>` document containing multiple prompts
+
+**Standard metadata keys**:
+
+| key | description | type | recommended? |
+| --- | ----------- | ---- | --------- |
+| `title` | Title of the prompt | string | yes |
+| `description` | Description for the prompt | string | yes |
+| `author` | Author of the prompt | string or array of strings | optional |
+| `created` | Date and time the prompt was created in ISO 8601 format | string (date) | optional |
+| `version` | Version of the prompt | string | optional |
+| `tags` | List of tags for the prompt | array of strings | optional |
+
+**Example `<meta>` tag**:
 
 ```xml
 <meta>
@@ -694,7 +855,11 @@ A `meta` tag is a great place to include metadata, specifically about the prompt
 </meta>
 ```
 
-You could also use the `<meta>` tag to include information that could define values for API calls. With this, Mixdown files could encompass not only the prompt, but the API call parameters as well. For example:
+#### Other uses of the `<meta>` tag
+
+**Defining API call parameters**:
+
+You could use the `<meta>` tag to include information that could define values for API calls. With this, Mixdown files could encompass not only the prompt, but the API call parameters as well. For example:
 
 ```xml
 <meta>
@@ -711,26 +876,17 @@ You could also use the `<meta>` tag to include information that could define val
 </meta>
 ```
 
-## 💡 Ideas for the future
+### The `<mixdown>` document tag
 
-Consider this just a random collection of ideas that might get added to the spec in the future.
-
-### Might do
-
-- Add use of conditional logic
-- Add an inheritance system for prompts
-  - Maybe a package-like system where a base prompt is defined, and a compiler can take that and apply it to a new prompt, or a new set of parameters
-- Add some methods for evaluation and testing
-
-### A `<mixdown>` tag**
-
-This would be a top-level wrapper tag, or self-contained `<mixdown />` tag that could contain metadata about the specific use of Mixdown.
+The `<mixdown>` tag, while not required, can be helpful to wrap the entire document in a single tag. It is also potentially helpful for XML-based parsers.
 
 ```xml
 <mixdown version="1.0.0" syntax="xml,json">
   <!-- rest of the prompt -->
 </mixdown>
 ```
+
+*Note*: The above example illustrates the use of the `syntax` attribute, which is not yet defined in the spec. The idea for this is that it would help a future Mixdown parser determine the syntax contained within the document.
 
 Alternatively, it could be included in a `<meta>` tag, formatted as YAML:
 
@@ -745,7 +901,9 @@ Alternatively, it could be included in a `<meta>` tag, formatted as YAML:
 </meta>
 ```
 
-## 🛣️ Roadmap
+## Roadmap
+
+### Todo
 
 - [x] Introduce Mixdown
   - [x] Create the basic syntax and semantics of Mixdown
@@ -765,14 +923,23 @@ Alternatively, it could be included in a `<meta>` tag, formatted as YAML:
   - [ ] Mixdown prompt templates
   - [ ] Mixdown best practices
 
-## ❓ Questions
+### Might do
+
+Consider this just a random collection of ideas that might get added to the spec in the future.
+
+- Add use of conditional logic
+- Add an inheritance system for prompts
+  - Maybe a package-like system where a base prompt is defined, and a compiler can take that and apply it to a new prompt, or a new set of parameters
+- Add some methods for evaluation and testing
+
+## Questions
 
 …section to come
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome and very much encouraged! Please open an issue, new discussion topic, or submit a pull request.
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
