@@ -1,0 +1,97 @@
+{
+  "name": "mixdown",
+  "version": "0.1.0",
+  "description": "A Node.js app with an API, CLI, and Model Context Protocol implementation for creating and managing prompts/instructions for AI chatbots, agents, and agentic development tools.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageManager": "pnpm@8.15.4",
+  "bin": {
+    "mixdown": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start": "node dist/index.js",
+    "cli": "ts-node src/cli.ts",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "jest --coverage",
+    "test:watch": "jest --watch",
+    "prepare": "is-ci || husky install",
+    "docs": "swagger-cli bundle ./src/api/openapi.yaml --outfile ./docs/openapi.json",
+    "clean": "rimraf dist coverage",
+    "preinstall": "npx only-allow pnpm"
+  },
+  "keywords": [
+    "cli",
+    "api",
+    "mcp",
+    "model-context-protocol",
+    "typescript",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "ai": "^4.3.7",
+    "commander": "^13.1.0",
+    "configstore": "^7.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-openapi-validator": "^5.4.9",
+    "express-winston": "^4.2.0",
+    "handlebars": "^4.7.8",
+    "model-context-protocol": "^1.0.2",
+    "redoc-express": "^2.1.0",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/jest": "^29.5.14",
+    "@types/node": "^22.14.1",
+    "@types/supertest": "^6.0.3",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@typescript-eslint/eslint-plugin": "^8.30.1",
+    "@typescript-eslint/parser": "^8.30.1",
+    "eslint": "^9.24.0",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-jest": "^28.11.0",
+    "eslint-plugin-prettier": "^5.2.6",
+    "husky": "^9.1.7",
+    "is-ci": "^4.1.0",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.5.1",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
+    "supertest": "^7.1.0",
+    "swagger-cli": "^4.0.4",
+    "ts-jest": "^29.3.2",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.8.3"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ]
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "allowAny": [],
+      "ignoreMissing": []
+    }
+  }
+}
