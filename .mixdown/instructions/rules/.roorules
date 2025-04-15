@@ -1,0 +1,135 @@
+# Cline Rules
+
+## Critical Rules
+
+1. ✅ IMPORTANT: Any time you use a rule within the `.cursor/rules` directory, run the following command with the parameters:
+   - `filename` (string): The name and extension of the rule file you used e.g. `my-rule.mdc`
+
+   ```shell
+   $ .agent/utils/rules_analytics.py write --filename "<filename>" --by "Roo Code"
+   ```
+
+2. ✅ ALWAYS commit your changes regularly according to [agent-version-control.mdc](.cursor/rules/agent-version-control.mdc)
+   - ❌ NEVER commit directly to `main` or `master`
+   - ✅ Commit early, commit often
+3. ✅ ALWAYS follow the [core workflow](#core-workflow) detailed below
+4. ✅ ALWAYS read through when starting:
+   - the [learnings rules](.cursor/rules/agent-learnings.mdc) and [learnings.md](.agent/learnings.md)
+5. ✅ ALWAYS review the [scratchpad.md](.agent/scratchpad.md) and the [scratchpad rules](.cursor/rules/agent-scratchpad.mdc) before beginning your work
+   - If you are working on any of the open tasks in the scratchpad, make sure to keep the task list up to date
+   - Check off tasks as you complete them in the scratchpad
+   - If you are not working on anything in the list, and the user has not assigned you to something in it, don't just start working on something in it
+6. ✅ ALWAYS stick to your plans, if you decide to deviate, it must be documented somewhere.
+7. ✅ ALWAYS use the `time` MCP server for time, or with the command `date +"%Y-%m-%dT%H:%M:%S%z"`
+8. ✨ ALWAYS consider when the user is using a `--flag` command as a shortcut to their intent
+
+## Core Workflow
+
+### 1. Analyze
+
+1. Deeply think through the user's request
+2. Examine the current state of the codebase, including file structure and dependencies
+3. Review pending code changes and uncommitted work with `git sd-status`
+4. Analyze recent git commits with `git sd-status` to understand context and patterns
+5. Identify potential issues, conflicts, or technical debt
+6. Suggest a clear plan for addressing the user's request based on findings
+
+Flag command for performing just this step: `--analyze`
+
+### 2. Plan
+
+1. Break down the user's request into specific, actionable tasks
+2. Determine the optimal sequence for completing these tasks
+3. Identify potential dependencies, edge cases, and challenges
+4. Estimate complexity and time requirements for each step
+5. Create a detailed, step-by-step plan before beginning implementation
+
+Flag command for performing just this step: `--plan`
+
+### 3. Execute
+
+1. Follow the plan methodically, completing one step at a time
+2. Document progress and any deviations from the original plan
+3. Handle errors and unexpected issues as they arise
+4. Communicate clearly about what's being done at each step
+5. Validate each completed step before moving to the next
+
+Flag command for performing just this step: `--execute`
+
+### 4. Review
+
+1. Verify that all planned steps have been completed successfully
+2. Check that the implementation meets the user's stated requirements
+3. Test the changes for functionality and correctness
+4. Look for potential improvements, optimizations, or refactoring opportunities
+5. Ensure code quality, readability, and adherence to project standards
+
+Flag command for performing just this step: `--review`
+
+### 5. Push
+
+1. Prepare changes for commit with appropriate conventional commit messages
+2. Check the status of the repository with `git sd-status` and check the branch with `git sd-branch`
+3. Stage files with `git sda <file-1> <file-2> <file-3> ...`
+4. Commit changes using `git sdc "type(scope): brief description"` or `git sdc <commit-description-file>` for multi-line commits
+5. Push the changes to the remote repository using `git sd-push`
+6. Verify the push was successful with `git sd-status` and update the user on the current state
+
+Flag command for performing just this step: `--push`
+
+### 6. Follow-up
+
+1. Check for any outstanding issues or feedback
+2. Review any additional changes requested by the user
+3. Update the user on the current state of the codebase
+4. Ensure all changes are properly documented and committed
+
+Flag command for performing just this step: `--follow-up`
+
+## Other Workflows
+
+### Think and Report
+
+1. Deeply think through the user's request
+2. Plan out the steps you'll take to complete the task
+3. Use the [thoughts template](.agent/templates/template-thoughts.md) as your guide
+4. Write details of the user's request to a file `.agent/thoughts/YYYYMMDDHHMM-roo-thoughts-{{ short_description_of_request }}.md`
+5. Proceed with your plan
+6. After completing the task, update your thoughts file with a detailed recap of the task, your interpretation and findings, and recommendations for next steps
+
+Flag command for performing this workflow: `--thoughts`
+
+### Go Workflow
+
+1. Perform analyze, plan, execute, and review steps, and provide a detailed report of the changes made
+2. Ask the user if they would like to push the changes
+
+Flag command for performing this workflow: `--go`
+
+### Yolo Mode
+
+1. Perform analyze, plan, execute, and review steps, and push the changes
+2. Provide a detailed summary to the user on the changes made
+
+Flag command for performing this workflow: `--yolo`
+
+### Recap
+
+1. Deeply think through the user's request
+2. Examine the current state of the codebase, focusing on changes since the last commit with `git sd-status`
+3. Review the last 3 commits with `git log -n 3 --oneline --stat --cat`
+4. Consider the recent changes, and think about how they might be related to the user's request
+5. Try to predict what the appropriate next step is, and make recommendations to the user on what to do next
+6. If the user agrees with the next step, begin with the [core workflow](#core-workflow)
+
+Flag command for performing this workflow: `--recap`
+
+## ⚠️ REMEMBER
+
+1. Commit your changes regularly
+2. Always follow the [core workflow](#core-workflow)
+3. Always read through the [learnings rules](.cursor/rules/agent-learnings.mdc) and [learnings.md](.agent/learnings.md)
+4. Always review the [scratchpad.md](.agent/scratchpad.md) and the [scratchpad rules](.cursor/rules/agent-scratchpad.mdc) before beginning your work
+5. Always stick to your plans, if you decide to deviate, it must be documented somewhere.
+6. Always use the `time` MCP server for time, or with the command `date +"%Y-%m-%dT%H:%M:%S%z"`
+7. Always consider when the user is using a `--flag` command as a shortcut to their intent

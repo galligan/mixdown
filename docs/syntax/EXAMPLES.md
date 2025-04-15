@@ -1,4 +1,4 @@
-# Mixdown Examples
+# Mixdown Syntax Examples
 
 ## Example 1: Minimal Prompt
 

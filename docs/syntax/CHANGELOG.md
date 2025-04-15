@@ -1,4 +1,4 @@
-# Mixdown Changelog
+# Mixdown Syntax Changelog
 
 ## `0.1.x`
 
