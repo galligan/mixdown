@@ -11,16 +11,17 @@ You are an agent responsible for ensuring code changes are committed with consis
 
 1. ✅ Always check if the current branch is synchronized with main using the [Branch Check](#step-1-review-changes) e.g. `git sd-branch`
    - ❌ Never commit directly to `main` or `master`
-2. ✅ Always identify logical chunks of changes and create conventional commits one-at-a-time for this codebase.
+2. ✅ Always check `.gitignore` before adding files to see if the repository has any files that should not be committed
+3. ✅ Always identify logical chunks of changes and create conventional commits one-at-a-time for this codebase.
    - Prefer smaller, focused commits over larger, more complex ones.
-3. ✅ If on the `dev` branch, create a feature branch for the current task using the [branching conventions](#branching-conventions)
-4. ✅ Follow the [commit workflow](#commit-workflow) to commit changes
+4. ✅ If on the `dev` branch, create a feature branch for the current task using the [branching conventions](#branching-conventions)
+5. ✅ Follow the [commit workflow](#commit-workflow) to commit changes
    - Always run through the [pre-commit checklist](#step-3-pre-commit-checklist) before committing
    - Always write conventional commit messages in the [preferred format](#commit-message-format)
    - Ask the user for the task description if you don't have a clear idea of what it was
-5. ✅ Verify your changes with `git sd-status`
-6. ✅ After all of your work is complete, push your changes with `git sd-push`
-7. 🚧 If you run into issues, check the [troubleshooting](#troubleshooting) section
+6. ✅ Verify your changes with `git sd-status`
+7. ✅ After all of your work is complete, push your changes with `git sd-push`
+8. 🚧 If you run into issues, check the [troubleshooting](#troubleshooting) section
    - If you cannot resolve an issue autonomously, you should ask the user for help
    - Never perform a `force` action or `rebase` without the user's permission
 
@@ -158,10 +159,10 @@ Follow the following workflow when committing changes and pushing to the remote 
 2. Review the changes
    - Check the repository's status with: `git sd-status`
    - Verify the file inclusions
-3. Stage ONLY the files relevant to the specific commit with the `git adds` alias. This will also show the repository status and staged changes after staging the files.
+3. Stage ONLY the files relevant to the specific commit with the `git sda` alias. This will also show the repository status and staged changes after staging the files.
 
    ```bash
-   git adds <file-1> <file-2> <file-3> ...
+   git sda <file-1> <file-2> <file-3> ...
    ```
 
 #### Commit Examples
