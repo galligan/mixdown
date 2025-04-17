@@ -7,6 +7,11 @@
 .pnp.js
 .yarn/install-state.gz
 
+# pnpm
+.pnpm-store/
+.pnpm-debug.log*
+.pnpm-lock.yaml
+
 # testing
 /coverage
 /.testing
@@ -33,7 +38,7 @@ yarn-error.log*
 .env
 
 # private files
-.notes/
+notes/
 
 # vercel
 .vercel
