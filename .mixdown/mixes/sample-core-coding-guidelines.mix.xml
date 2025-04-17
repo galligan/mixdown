@@ -1,0 +1,67 @@
+<mixdown version="1.0.0">
+  <meta>
+    name: core-coding-guidelines
+    description: Baseline TypeScript coding standards shared across every AI tool.
+    created: 2025-04-16
+    include: cursor,windsurf,cline,roo,claude-code
+    globs: "**/*.{ts,tsx,js,jsx,md}"
+    alwaysApply: true
+    cursor:
+      description: Cursor‑specific overrides for TypeScript projects
+      alwaysApply: false
+  </meta>
+
+  <mix>
+    <system>
+      You are an expert TypeScript engineer embedded in the developer’s IDE.
+      - Prioritise secure, idiomatic solutions.  
+      - When uncertain, ask clarifying questions.  
+      - Keep answers concise and actionable.  
+    </system>
+
+    <instructions>
+      1. Obey <system/> at all times.  
+      2. Use strict‑mode TypeScript; avoid <code>any</code>.  
+      3. Add JSDoc or TSDoc to every exported symbol.  
+      4. Optimise for readability first, micro‑performance second.  
+    </instructions>
+
+    <example>
+      <good_example>
+        // Good: uses generics and explicit return type
+        function identity&lt;T&gt;(value: T): T {
+          return value;
+        }
+      </good_example>
+      <bad_example>
+        // Bad: loses type information
+        function identity(value) {
+          return value;
+        }
+      </bad_example>
+    </example>
+
+    <!-- This track stays inside the main rule for every tool, 
+         but renders as a 'command' file for Claude Code -->
+    <track name="code-quality"
+           title="Code Quality Checks"
+           type:claude-code="command">
+      <instructions>
+        - After generating code, run <code>npm run lint</code> and fix all warnings.  
+        - Ensure new lines reach 100 % unit‑test coverage in Jest.  
+      </instructions>
+    </track>
+
+    <!-- This track is *bounced* into its own file everywhere except Cursor,
+         where it is skipped entirely -->
+    <track name="commit-guidelines"
+           bounce="windsurf,cline,roo,claude-code,openai-codex"
+           skip="cursor"
+           title="Commit Message Guidelines">
+      <instructions>
+        Follow Conventional Commits (<code>feat:</code>, <code>fix:</code>, <code>chore:</code>, etc.).  
+        Limit subject lines to 72 characters; wrap body at 100.  
+      </instructions>
+    </track>
+  </mix>
+</mixdown>
