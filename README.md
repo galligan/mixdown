@@ -17,6 +17,12 @@ With Mixdown, you can apply the "Don't Repeat Yourself" principle to your agenti
 
 Mixdown is "Terraform for AI prompts": declare your ideal prompt rules once, target dozens of coding agents, and guarantee every teammate (human or bot) runs with the same authoritative instructions—no copy‑paste, no drift, just high‑quality, version‑controlled context.
 
+## What's with the name?
+
+We borrowed "Mixdown" from the music product world because it nails the vibe so well. Think of a mixdown as the moment a song stops being a pile of takes and starts being the version everyone hears. That’s what this toolbox does for prompt engineering: it fuses disparate rules into one golden master, then automatically “bounces” the perfect format for Cursor, Windsurf, Claude Code, and beyond.
+
+Many of the functions & features of Mixdown are inspired by terms used in music production, both because of some overlap in the concepts (remixing, sampling, etc.) and because it's, well, fun. Look for the 💽 emoji throughout the docs to see why a term was picked.
+
 ### Mixdown Supported Tools
 
 - IDEs
@@ -43,6 +49,27 @@ npm install -g mixdown
 ```bash
 npm install mixdown
 ```
+
+## Versioning and Changelog
+
+This project uses [Changesets](https://github.com/changesets/changesets) for versioning and changelog management.
+
+### Adding a Changeset
+
+When making changes that should be reflected in the version number and changelog, create a changeset:
+
+```bash
+pnpm changeset add
+```
+
+Follow the prompts to:
+
+1. Select the appropriate version bump (patch, minor, major)
+2. Write a description of the change for the changelog
+
+### For Contributors
+
+For more detailed information on using Changesets in this project, see [docs/CHANGESETS.md](/docs/CHANGESETS.md).
 
 ## Quick Start
 
@@ -94,6 +121,7 @@ We use [YAML frontmatter](https://jekyllrb.com/docs/front-matter/) to define the
 #### Standard Keys
 
 - `name`: The name of the mix.
+  - Names are formatted as `kebab-case`, meaning all lowercase with hyphens to separate words.
 - `description`: A description of the mix.
 
 #### Meta Keys
@@ -113,6 +141,7 @@ Optional keys aren't required for Mixdown to work, but will be included in any t
 - `globs`: A list of globs to include in the mix. e.g. `globs: **/*.md`
   - Mixdown's globs implementation supports more complex patterns than what individual tools may support e.g. `**/*.{md,mdc,txt}`.
     - In these cases, Mixdown will parse the globs, and apply the appropriate tool-specific globs format when writing the files.
+  - `type="mode"`: Modes are supported by some tools, which allow for agents to have entirely different sets of instructions e.g. "Architect," "Writer," "Coder," etc.
 - `alwaysApply`: Whether the mix should always be applied.
 
 #### Tool Overrides
@@ -203,52 +232,63 @@ You are a helpful assistant that can answer questions and help with tasks. The u
 
 The example above could be a complete AI prompt. In it we're using both section tags and placeholders. The placeholders are used to tell the LLM which values to use in the document, and the section tags are there to distinguish different aspects or instructions for the LLM.
 
-### Splitting Mixes with "Tracks"
+### Splitting Mixes with "Stems"
 
-One special feature of Mixdown is the ability to have a single mix file that can be split and written into multiple rules/instructions, with options for when to do the splitting. These are called "tracks." You can think of these as mixes themselves, but embedded a "parent" mix. This is useful for when you're setting up instructions for different coding agents, where one may prefer to have a single instruction, while another may prefer to have them broken down into multiple sections.
+One special feature of Mixdown is the ability to have a single mix file that can be split and written into multiple rules/instructions, with options for when to do the splitting. These are called "stems." You can think of these as mixes themselves, but embedded a "parent" mix. This is useful for when you're setting up instructions for different coding agents, where one may prefer to have a single instruction, while another may prefer to have them broken down into multiple sections.
 
-To add a split to a mix, you can use the `<track>` tag (also usable as `<t>`). Attributes are included within the tag to specify conditions for creating new files, whether or not to include them in certain rules files for specific tools, and more.
+To add a split to a mix, you can use the `<stem>` tag (also usable as `<s>`). Attributes are included within the tag to specify conditions for creating new files, whether or not to include them in certain rules files for specific tools, and more.
 
-When including a track in a mix, you'll need to give it a name, and use one or more of the following attributes for it to work: `bounce`, `skip`, or `type`.
+When including a stem in a mix, you'll need to give it a name, and use one or more of the following attributes for it to work: `bounce`, `skip`, or `type`.
 
-#### Track Attributes
+#### Stem Attributes
 
-- `name` (required): The name of the track. This will be used to name the file that is created when the mix is split. The files will be written to their respective tool's directory with its preferred file extension.
-  - Example: `<track name="code-quality">` would create `.cursor/rules/code-quality.mdc` for Cursor, and `.roo/rules/code-quality.md` for Roo Code.
+- `name` (required): The name of the stem. This will be used to name the file that is created when the mix is split. The files will be written to their respective tool's directory with its preferred file extension.
+  - Example: `<stem name="code-quality">` would create `.cursor/rules/code-quality.mdc` for Cursor, and `.roo/rules/code-quality.md` for Roo Code.
   - `name[:tool]`: You can use a `:` as a namespace to specify tool-specific alternative names for written files. You can specify one or more tools by using a colon, followed by the tool's name e.g. `name:cursor="code-quality-rules" name:claude-code="code-quality"`.
-- `title[:tool]`: The title of the track. This will be used as a title at the top of the output files, likely as a `# H1 Heading`. By default the title will output with the first letter of the title capitalized. Otherwise, formatting will be preserved.
-- `skip="[tools]"`: This attribute indicates that a track should not get written to a tool's instructions. It's populated with a comma-separated list of tool names.
-  - Example: `skip="cursor"` would mean that when writing the mix to Cursor Rules, this particular track would not be included.
-- `bounce="[tools]"`: Bouncing a track means that the track will be skipped in the mix's final output, and will be written as a separate file. This is handy when you want to write instructions in a comprehensive way, but ultimately want to have separate files for each tool to work with.
-  - It can be used on its own, without including specific tools: `<track name="my-rule" bounce>`. This will create a file called `my-rule.md` in all target directories, and skip the track's content in the main mix output files.
-  - You can also include specific tools to bounce the track for: `<track name="my-rule" bounce="cursor,roo">`. This will create a file called `my-rule.md` in the each tool's respective directories, but only for Cursor and Roo Code.
-- `type[:tool]`: This attributes allows you to specify the "type" of output you'd like the track to be written as. You can specify one or more tools by using a colon, followed by the tool's name e.g. `type:cursor="rule" type:claude-code="command"`.
+- `title[:tool]`: The title of the stem. This will be used as a title at the top of the output files, likely as a `# H1 Heading`. By default the title will output with the first letter of the title capitalized. Otherwise, formatting will be preserved.
+- `skip="[tools]"`: This attribute indicates that a stem should not get written to a tool's instructions. It's populated with a comma-separated list of tool names.
+  - Example: `skip="cursor"` would mean that when writing the mix to Cursor Rules, this particular stem would not be included.
+- `bounce="[tools]"`: Bouncing a stem means that the stem will be skipped in the mix's final output, and will be written as a separate file. This is handy when you want to write instructions in a comprehensive way, but ultimately want to have separate files for each tool to work with.
+  - You can also include specific tools to bounce the stem for: `<stem name="my-rule" bounce="cursor,roo">`. This will create a file called `my-rule.md` in the each tool's respective directories, but only for Cursor and Roo Code.
+- `solo`: Solo is a shortcut for `bounce` that will create a separate stem file called `my-rule.md` in all target directories, and skip the stem's content from being included in the main mix output files.
+- `type[:tool]`: This attributes allows you to specify the "type" of output you'd like the stem to be written as. You can specify one or more tools by using a colon, followed by the tool's name e.g. `type:cursor="rule" type:claude-code="command"`.
 
-#### Attribute Namespaces
+> [!NOTE]
+> 💽 **STEM**: In music production, a "stem" is a sub-mix exported for separate handling. We're using stem here to refer to a split of a mix that can be written to a tool's instruction file.
+>
+> 💽 **BOUNCE**: In studio recording, engineers "bounce" stems when they render each stem (or the whole mix) to its own audio file. In Mixdown, you bounce stems when you tell skip the inline version and export that stem into a stand-alone tool file. In both contexts, bouncing creates a separate artifact from the original source.
+>
+> 💽 **SOLO**: In studio recording, a "solo" is when an engineer singles out a specific track to work on and listen to it in isolation. In Mixdown, a solo stem is a stem that is written to a tool's instruction file, but not included in the main mix output files.
+
+**Attribute Namespaces:**
 
 The `name`, `title`, and `type` attributes allow for the use of a `:` as a namespace to specify tool-specific values. This allows you to customize the output for specific tools in a really granular way.
 
-#### Track Example
+#### Formatting Bounced Stems
 
-Here's how a track might look within a mix:
+When bouncing a stem, Mixdown will re-write the headings within the content of the stem to ensure the resulting output file is formatted with correct heading levels. Note: this will not apply to content that's in code blocks or within `<template>` tags.
+
+#### Stem Example
+
+Here's how a stem might look within a mix:
 
 ```xml
 <!-- Rest of the mix above -->
-<track name="code-quality" type:cursor="rule" type:claude-code="command" title="Code Quality Guidelines" title:claude-code="Code Quality Command">
+<stem name="code-quality" type:cursor="rule" type:claude-code="command" title="Code Quality Guidelines" title:claude-code="Code Quality Command">
 ...
-</track>
+</stem>
 <!-- Rest of the mix below -->
 ```
 
-### Using "Patch" for tool-specific instructions
+### Using "Punch" for tool-specific instructions
 
-The `<patch>` tag (also usable as `<p>`) is used to add tool-specific instructions to a mix, which would be written to the declared tool's instruction file.
+The `<punch>` tag (also usable as `<p>`) is used to add tool-specific instructions to a mix, which would be written to the declared tool's instruction file.
 
 Example:
 
 ```xml
-<!-- Nesting patch tags with named tools -->
-<patch>
+<!-- Nesting punch tags with named tools -->
+<punch>
 <cursor>
 ---
 description: 
@@ -259,36 +299,82 @@ alwaysApply:
 <windsurf>
 ...
 </windsurf>
-</patch>
+</punch>
 
-<!-- Patching with tools as an attribute -->
-<patch for="cursor,windsurf">foo</patch>
-<patch for="roo,cline">bar</patch>
+<!-- punching with tools as an attribute -->
+<punch for="cursor,windsurf">foo</punch>
+<punch for="roo,cline">bar</punch>
 ```
+
+> [!NOTE]
+> 💽 **PUNCH**: In audio recording, a "[punch](https://en.wikipedia.org/wiki/Punch_in/out)" refers to the technique of recording over a specific section of an existing track. We use the term here to refer to tool-specific instructions that get "punched" into a tool's final output files.
+
+### Adding content to a Mix with "Splice"
+
+A "splice" is used to inject content into a mix, from either the `.mixdown/splices` directory, an existing mix file, or from a stem contained within the same mix. This adds a significant amount of flexibility to your mixes, allowing for more dynamic and reusable prompts. Here's how they're formatted:
+
+- `$[splice:name]`: Injects the content of the splice file named `name.mix.xml` from the `.mixdown/splices` directory.
+- `$[splice:mix:name]`: Injects the content of the mix file named `name.mix.xml` from the `.mixdown/mixes` directory. When you do this, the mix content is included inline without consideration of the mix's `<meta>` section, `<stem>` tags, or any other mix-specific content.
+- `$[splice:stem:name]`: Injects the content of a stem named `name` contained within the same mix. This is handy to re-use content from elsewhere in the same mix, such as important instructions that may be useful in the top or bottom of a mix.
+
+Splices also support re-writing the top-most heading from the source content, or removing it entirely. This is useful to avoid confusion when the source content has a heading that doesn't quite fit with the rest of the mix. Here's how it works:
+
+- `$[splice:name title="[## ]New Title"]`: This will rewrite the top-most heading of the source content with "new title". You don't need to include a `#` heading symbol in the title, but it's recommended to avoid confusion.
+- `$[splice:name title-none]`: This will remove the top-most heading from the source content.
+
+#### Example Splices
+
+```md
+<!-- Rest of the mix above -->
+$[splice:legal]
+```
+
+This will inject the content of `./mixdown/splices/legal.mix.xml` into the mix. If no such file exists, Mixdown will warn and skip the splice. It can also be configured to fail the build if a splice is missing or by using the `--strict` flag.
+
+> [!NOTE]
+> 💽 **SPLICE**: In audio production, a "splice" refers to the technique of joining two separate pieces of audio tape or digital audio segments together. Similarly, in Mixdown, splices allow you to join different content pieces together, injecting content from external files or other parts of your mix to create a cohesive final output.
 
 ## TODOS (build, and documentation)
 
 <!-- TODO: Add a section here explaining how Mixdown works. Going to stub it out for now -->
 
-1. Compiler / validation layer
+1. SHA-256 of rendered files
+2. Compiler / validation layer
    - Schema linting: Mixdown will lint `.mix.xml` files to ensure they're valid. Surfacing errors and warnings to the user (unknown tags, bad placeholders, unknown attributes, etc.)
    - Dry-run "rough mix": `mixdown rough --tool cursor` will output the rough mix for would-be Cursor .mdc rules files, so the user can review it before it's written.
    - Round-trip tests: snapshot generated files and fail CI if output drift occurs without a corresponding change to the mix.
-2. Plug-in architecture
+   - Publish: final mix output is performed with `mixdown publish`. This will write the final mix outputs to their respective destinations. A "production" report is saved as a JSON file in the `./mixdown/output/latest` directory (a symlink to the latest version). It includes the following information:
+     - The mix's name, version, and hash ID of the mix's content
+     - The date and time the mix was published
+     - A list of tools the mix was written to
+     - A list of files that were written, and their hash ID
+     - A list of files that were skipped
+     - A list of files that had errors
+3. Plug-in architecture
    - Expose a `toolProvider` interface (`resolvePath(), renderTemplate(), etc.) so the community can PR support for as-yet-unsupported tools.
    - Keep core small; ship extra providers as optional npm packages e.g. `@mixdown/tool-cursor`, `@mixdown/tool-godmode`, etc.
-3. Content-aware helpers
-   - Placeholder helpers: built-in fucntions like `[git_branch]`, `[project_name]`, `[user_name]`, `[random_uuid]`, etc.
+4. Content-aware helpers
+   - Runtime inserts as splices: You can use built-in functions like `$[splice:@git_branch]`, `$[splice:@project-name]`, `$[splice:@user-name]`, `$[splice:@random-uuid]`, etc. We'll use one sigil `$` to denote a splice and distinguish them from placeholders.
+     - The `@` is used to denote a runtime splice, and is used to distinguish them from static splices. They will be resolved at runtime, and will include the current state of the project.
+     - You can use the values from the `<meta>` section of a mix to populate a splice.
+     - Runtime splices can also be configured in `./mixdown/config.yaml` to set project-default values, or trigger scripts to run contained in `./mixdown/scripts`.
    - LLM test harness: run each generated prompt against a chosen model with canned inputs; flag large response deltas to highlight prompt regressions.
-4. UI / DX
+5. Security & sandbox
+   - XML + string interpolation invites XSS attacks; sanitize all content before writing to disk
+   - Use `fast-xml-parser` to parse XML content with `ignoreEntities: true`
+   - For placeholders that shell out to a command e.g. `
+6. UI / DX
    - Define CLI
    - Define MCP server
    - Web playground: paste a mix, select target tools, see render files side-by-side for learning/sharing
-5. Versioning & distribution
+7. Versioning & distribution
    - Mix registry: a GitHub‑backed index of public mixes with semantic versioning so teams can mixdown install `@acme/rails-rules@^2.0.0`
    - Embedded changelogs: auto‑insert a generated comment block at top of emitted files linking back to mix + commit SHA that produced it.
-6. Interop with MCP
+8. Interop with MCP
    - Since we already lean on MCP, expose a GET /mixes/:tool route so any agent in the Mixdown ecosystem can fetch fresh rules before spawning
    - Optionally embed a checksum header so agents can skip download if nothing changed.
-7. Backlog
-   - Optional `.mixdown.yaml` companion: for folks allergic to XML, we could offer a pure YAML alternative that compiles to the same AST.
+
+### Backlog
+
+- "Takes": version/tag of a mix, which could allow for A/B testing of mixes
+- Optional `.mixdown.yaml` companion: for folks allergic to XML, we could offer a pure YAML alternative that compiles to the same AST.
