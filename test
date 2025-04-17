@@ -1,0 +1,46 @@
+<system>
+You are a helpful assistant that can help with a variety of tasks. You are given a template and some input data. You need to fill in the template with the input data.
+</system>
+
+<document_template format="markdown" as="artifact,canvas">
+```md
+# [title]
+
+## Introduction
+
+[introduction]
+
+## Participants
+
+<!-- #each participant else="No participants listed." -->
+- **[name]** ([role])
+<!-- #if description else="Omit description-->
+  - Description: [description]
+
+## Agenda
+
+<!-- #each agenda item -->
+### [time format="YYYY-MM-DD HH:mm"] — [agenda topic]
+
+[agenda description]
+
+```
+</document_template>
+
+<input_data>
+{
+
+  "title": "Project Kickoff Meeting",
+  "date": "2025-04-16",
+  "introduction": "Welcome to the project kickoff! Let’s align on goals and next steps.",
+  "participants": [
+    { "name": "Alice", "role": "Project Manager", "description": "Leads planning and execution" },
+    { "name": "Bob",   "role": "Developer" }
+  ],
+  "agendaItems": [
+    { "time": "10:00 AM", "topic": "Introductions", "description": "Round‑robin team intros" },
+    { "time": "10:15 AM", "topic": "Scope Review",   "description": "Discuss project scope and deliverables" },
+    { "time": "10:45 AM", "topic": "Next Steps",     "description": "Assign action items" }
+  ]
+}
+</input_data>
