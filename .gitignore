@@ -32,6 +32,9 @@ yarn-error.log*
 .env*.local
 .env
 
+# private files
+.notes/
+
 # vercel
 .vercel
 
