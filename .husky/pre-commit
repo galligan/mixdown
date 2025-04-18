@@ -2,4 +2,5 @@
 . "$(dirname -- "$0")/_/husky.sh"
 
 # Run lint-staged to format and lint files before commit
-pnpm lint-staged 
+# Temporarily commented out until we have more code
+# pnpm lint-staged 
