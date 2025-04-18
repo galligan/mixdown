@@ -1,0 +1,83 @@
+<mixdown version="0.1.0">
+
+<meta>
+name: core-coding-guidelines
+title: Core Coding Guidelines
+description: Baseline TypeScript coding standards shared across every AI tool.
+created: 2025-04-16
+include: cursor,windsurf,cline,roo,claude-code
+globs: "**/*.{ts,tsx,js,jsx,md}"
+alwaysApply: true
+cursor:
+  description: Use these guidelines when coding for TypeScript projects
+  alwaysApply: false
+</meta>
+
+<mix>
+
+<system>
+You are an expert TypeScript engineer embedded in the developer's IDE.
+- Prioritise secure, idiomatic solutions.  
+- When uncertain, ask clarifying questions.  
+- Keep answers concise and actionable.  
+</system>
+
+<instructions>
+1. Obey <system/> at all times.  
+2. Use strict‑mode TypeScript; avoid `any`.  
+3. Add JSDoc or TSDoc to every exported symbol.  
+4. Optimise for readability first, micro‑performance second.  
+</instructions>
+
+<example>
+
+<good_example>
+```ts
+// Good: uses generics and explicit return type
+function identity<T>(value: T): T {
+  return value;
+}
+```
+</good_example>
+
+<bad_example>
+```ts
+// Bad: loses type information
+function identity(value) {
+  return value;
+}
+```
+</bad_example>
+
+</example>
+
+<!-- This punch stays inside the main rule for every tool, 
+     but renders as a 'command' file for Claude Code -->
+<punch name="code-quality"
+       title="Code Quality Checks"
+       type:claude-code="command">
+
+<instructions>
+- After generating code, run `npm run lint` and fix all warnings.  
+- Ensure new lines reach 100 % unit‑test coverage in Jest.  
+</instructions>
+
+</punch>
+
+<!-- This punch is *bounced* into its own file everywhere except Cursor,
+     where it is skipped entirely -->
+<punch name="commit-guidelines"
+       bounce="windsurf,cline,roo,claude-code,openai-codex"
+       skip="cursor"
+       title="Commit Message Guidelines">
+
+<instructions>
+Follow Conventional Commits (`feat:`, `fix:`, `chore:`, etc.).  
+Limit subject lines to 72 characters; wrap body at 100.  
+</instructions>
+
+</punch>
+
+</mix>
+
+</mixdown>

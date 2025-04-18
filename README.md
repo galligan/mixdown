@@ -89,11 +89,11 @@ This command will create a`.mixdown` directory within your project with the foll
 ├── scripts/       # Custom scripts for runtime splices
 ├── studio/
 │   ├── mixes/     # Your mix files
-│   │   └── [mix-name].mix.xml
+│   │   └── [mix-name].mxml
 │   ├── splices/   # Reusable content fragments
-│   │   └── [splice-name].mix.xml
+│   │   └── [splice-name].mxml
 │   └── templates/ # Template files
-│       └── [template-name].mix.xml
+│       └── [template-name].mxml
 ├── config.yaml    # Project configuration
 └── README.md      # Mixdown Documentation
 ```
@@ -102,12 +102,12 @@ This command will create a`.mixdown` directory within your project with the foll
 
 ### Templating with "Mixes"
 
-Templates in Mixdown are called "Mixes". This is to avoid confusion with other terms like "prompts", "instructions", or "templates." Think of a mix as the "gold master" of a rule/instruction/prompt. Mixes use a specific syntax to define how the instructions should be written out to the directories of the tools you're using, in the format they're expecting. We use the `.mix.xml` extension to denote a Mixdown file.
+Templates in Mixdown are called "Mixes". This is to avoid confusion with other terms like "prompts", "instructions", or "templates." Think of a mix as the "gold master" of a rule/instruction/prompt. Mixes use a specific syntax to define how the instructions should be written out to the directories of the tools you're using, in the format they're expecting. We use the `.mxml` extension to denote a Mixdown file.
 
-The default setup for a Mix (`./mixdown/studio/mixes/[mix-name].mix.xml`) is:
+The default setup for a Mix (`./mixdown/studio/mixes/[mix-name].mxml`) is:
 
 ```xml
-<mixdown version="1.0.0">
+<mixdown version="0.1.0">
 <meta>
 name: rule-name
 description: This is a rule description
@@ -179,7 +179,7 @@ claude-code:
 
 **Placeholders** are denoted by square brackets e.g. `[name]`. They are used as instructions for the AI to fill in the value. The square brackets were selected as they are already a common convention in AI prompting, and are visually distinct from the rest of the text.
 
-Attributes can also be added to the placeholder to direct the formatting of the value. For example, `[name format="uppercase"]` will instruct the AI to format the name in uppercase. You can also try other types of formatting options such as `[date format="YYYY-MM-DD"]` or `[time format="HH:mm"]`.
+Attributes can also be added to the placeholder to direct the formatting of the value. For example, `[name format="uppercase"]` will instruct the AI to format the name in uppercase. You can also try other types of formatting options such as `[date format="YYYY-MM-DD"]` or `[time format="HH:2
 
 Example:
 
@@ -321,8 +321,8 @@ alwaysApply:
 
 A "splice" is used to inject content into a mix, from either the `.mixdown/splices` directory, an existing mix file, or from a stem contained within the same mix. This adds a significant amount of flexibility to your mixes, allowing for more dynamic and reusable prompts. Here's how they're formatted:
 
-- `$[s:name]`: Injects the content of the splice file named `name.mix.xml` from the `.mixdown/splices` directory.
-- `$[s:mix:name]`: Injects the content of the mix file named `name.mix.xml` from the `.mixdown/mixes` directory. When you do this, the mix content is included inline without consideration of the mix's `<meta>` section, `<stem>` tags, or any other mix-specific content.
+- `$[s:name]`: Injects the content of the splice file named `name.mxml` from the `.mixdown/splices` directory.
+- `$[s:mix:name]`: Injects the content of the mix file named `name.mxml` from the `.mixdown/mixes` directory. When you do this, the mix content is included inline without consideration of the mix's `<meta>` section, `<stem>` tags, or any other mix-specific content.
 - `$[s:stem:name]`: Injects the content of a stem named `name` contained within the same mix. This is handy to re-use content from elsewhere in the same mix, such as important instructions that may be useful in the top or bottom of a mix.
 - `$[s:template:name]`: Injects the content of a template named `name` from the `.mixdown/templates` directory.
 - `$[splice path="path/to/file.md"]`: Injects the content of the file at `path/to/file.md` inline into the mix. We use the full `splice` keyword ensure Mixdown handles it correctly. 🚧 Any spliced in content will be sanitized to avoid potential security concerns.
@@ -346,7 +346,7 @@ Profile splices are a way to inject content from a profile (personal, project, o
 $[s:legal]
 ```
 
-This will inject the content of `./mixdown/studio/splices/legal.mix.xml` into the mix. If no such file exists, Mixdown will warn and skip the splice. It can also be configured to fail the build if a splice is missing or by using the `--strict` flag.
+This will inject the content of `./mixdown/studio/splices/legal.mxml` into the mix. If no such file exists, Mixdown will warn and skip the splice. It can also be configured to fail the build if a splice is missing or by using the `--strict` flag.
 
 > [!NOTE]
 > 💽 **SPLICE**: In audio production, a "splice" refers to the technique of joining two separate pieces of audio tape or digital audio segments together. Similarly, in Mixdown, splices allow you to join different content pieces together, injecting content from external files or other parts of your mix to create a cohesive final output.
@@ -384,7 +384,7 @@ aliases:
 
 project:
   legal:
-    path: "./privacy.mix.xml"
+    path: "./privacy.mxml"
     title: "Lumon Privacy Policy"
 ```
 
@@ -395,7 +395,7 @@ Will go like this:
 $[a:legal]
 
 <!-- Is interpreted as: -->
-$[splice path="./privacy.mix.xml" title="Company Privacy Policy"]
+$[splice path="./privacy.mxml" title="Company Privacy Policy"]
 
 <!-- Which will be written into the output files as: -->
 ## Lumon Privacy Policy
@@ -412,7 +412,7 @@ Note in the above example that the YAML key `legal` has `path` and `title` keys.
 
 1. SHA-256 of rendered files
 2. Compiler / validation layer
-   - Schema linting: Mixdown will lint `.mix.xml` files to ensure they're valid. Surfacing errors and warnings to the user (unknown tags, bad placeholders, unknown attributes, etc.)
+   - Schema linting: Mixdown will lint `.mxml` files to ensure they're valid. Surfacing errors and warnings to the user (unknown tags, bad placeholders, unknown attributes, etc.)
    - Dry-run "rough mix": `mixdown rough --tool cursor` will output the rough mix for would-be Cursor .mdc rules files, so the user can review it before it's written.
    - Round-trip tests: snapshot generated files and fail CI if output drift occurs without a corresponding change to the mix.
    - Publish: final mix output is performed with `mixdown publish`. This will write the final mix outputs to their respective destinations. A "production" report is saved as a JSON file in the `./mixdown/output/latest` directory (a symlink to the latest version). It includes the following information:

@@ -35,7 +35,7 @@
 
 ## 🟡 In Progress Tasks
 
-- ...
+- [ ] Project: Mixdown MVP Task Plan ([ref](./.agent/plans/mixdown-mvp-tasks.md))
 
 ## 🔵 Future Tasks
 
