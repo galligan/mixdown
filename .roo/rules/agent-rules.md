@@ -1,19 +1,17 @@
-# Roo Code Agent Rules
+# Roo Code Rules
 
 ## Critical Rules
 
-1. ✅ ALWAYS commit your changes regularly according to [agent-version-control.mdc](../../.cursor/rules/agent-version-control.mdc)
+1. ✅ ALWAYS create tasks for your work, before beginning any work. Use the [task management rules](./.cursor/rules/task-management.mdc) to manage your tasks
+2. ✅ ALWAYS use the [version control rules](./.cursor/rules/agent-version-control.mdc) when making changes to the codebase
    - ❌ NEVER commit directly to `main` or `master`
    - ✅ Commit early, commit often
-2. ✅ ALWAYS follow the [core workflow](#core-workflow) detailed below
-3. ✅ ALWAYS read through when starting:
-   - the [learnings rules](../../.cursor/rules/agent-learnings.mdc) and [learnings.md](../../.agent/learnings.md)
-4. ✅ ALWAYS review the [scratchpad.md](../../.agent/scratchpad.md) and the [scratchpad rules](../../.cursor/rules/agent-scratchpad.mdc) before beginning your work
-   - If you are working on any of the open tasks in the scratchpad, make sure to keep the task list up to date
-   - Check off tasks as you complete them in the scratchpad
-   - If you are not working on anything in the list, and the user has not assigned you to something in it, don't just start working on something in it
+3. ✅ ALWAYS follow the [core workflow](#core-workflow) detailed below unless otherwise specified
+4. ✅ ALWAYS read through when starting:
+   - the [learnings rules](./.cursor/rules/agent-learnings.mdc) and [learnings.md](./.agent/learnings.md)
+   - the open [tasks](./.agent/tasks.md)
 5. ✅ ALWAYS stick to your plans, if you decide to deviate, it must be documented somewhere.
-6. ✅ ALWAYS use the `time` MCP server for time, or with the command `date +"%Y-%m-%dT%H:%M:%S%z"`
+6. ✅ ALWAYS use the command `date +"%Y-%m-%dT%H:%M:%S%z"` when recording time
 7. ✨ ALWAYS consider when the user is using a `--flag` command as a shortcut to their intent
 
 ## Core Workflow
@@ -83,8 +81,8 @@ Flag command for performing just this step: `--follow-up`
 
 ### Code Review
 
-1. Follow the [code review rules](../../.cursor/rules/report-code-review.md)
-2. Use the [code review template](../../.agent/templates/template-code-review.md) to create a code review report
+1. Follow the [code review rules](./.cursor/rules/report-code-review.md)
+2. Use the [code review template](./.agent/templates/template-code-review.md) to create a code review report
 
 Flag command for performing this workflow: `--code-review`
 
@@ -92,7 +90,7 @@ Flag command for performing this workflow: `--code-review`
 
 1. Deeply think through the user's request
 2. Plan out the steps you'll take to complete the task
-3. Use the [thoughts template](../../.agent/templates/template-thoughts.md) as your guide
+3. Use the [thoughts template](./.agent/templates/template-thoughts.md) as your guide
 4. Write details of the user's request to a file `.agent/thoughts/YYYYMMDDHHMM-roo-thoughts-{{ short_description_of_request }}.md`
 5. Proceed with your plan
 6. After completing the task, update your thoughts file with a detailed recap of the task, your interpretation and findings, and recommendations for next steps
@@ -128,8 +126,7 @@ Flag command for performing this workflow: `--recap`
 
 1. Commit your changes regularly
 2. Always follow the [core workflow](#core-workflow)
-3. Always read through the [learnings rules](../../.cursor/rules/agent-learnings.mdc) and [learnings.md](../../.agent/learnings.md)
-4. Always review the [scratchpad.md](../../.agent/scratchpad.md) and the [scratchpad rules](../../.cursor/rules/agent-scratchpad.mdc) before beginning your work
+3. Always read through the [learnings rules](./.cursor/rules/agent-learnings.mdc) and [learnings.md](./.agent/learnings.md)
+4. Always use the [task management rules](./.cursor/rules/task-management.mdc) to manage your tasks
 5. Always stick to your plans, if you decide to deviate, it must be documented somewhere.
-6. Always use the `time` MCP server for time, or with the command `date +"%Y-%m-%dT%H:%M:%S%z"`
-7. Always consider when the user is using a `--flag` command as a shortcut to their intent
+6. Always consider when the user is using a `--flag` command as a shortcut to their intent

@@ -1,0 +1,115 @@
+{
+  "name": "mixdown",
+  "version": "0.1.0",
+  "description": "A Node.js app with an API, CLI, and Model Context Protocol implementation for creating and managing prompts/instructions for AI chatbots, agents, and agentic development tools.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "packageManager": "pnpm@8.15.4",
+  "bin": {
+    "mixdown": "dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
+    "start": "node dist/index.js",
+    "cli": "ts-node src/cli.ts",
+    "lint": "eslint . --ext .ts",
+    "lint:fix": "eslint . --ext .ts --fix",
+    "format": "prettier --write \"src/**/*.ts\"",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "prepare": "echo 'Husky hooks temporarily disabled' # is-ci || husky install",
+    "docs": "swagger-cli bundle ./src/api/openapi.yaml --outfile ./docs/openapi.json",
+    "clean": "rimraf dist coverage",
+    "preinstall": "npx only-allow pnpm",
+    "changeset": "changeset",
+    "changeset:add": "changeset add",
+    "changeset:status": "changeset status",
+    "changeset:version": "changeset version",
+    "release": "pnpm build && changeset publish"
+  },
+  "keywords": [
+    "cli",
+    "api",
+    "mcp",
+    "model-context-protocol",
+    "typescript",
+    "ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.39.0",
+    "ai": "^4.3.7",
+    "configstore": "^7.0.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "express-openapi-validator": "^5.4.9",
+    "express-winston": "^4.2.0",
+    "handlebars": "^4.7.8",
+    "ink": "^5.2.0",
+    "ink-ascii": "^0.0.4",
+    "ink-divider": "^4.1.1",
+    "ink-form": "^2.0.1",
+    "ink-spawn": "^0.1.4",
+    "ink-spinner": "^5.0.0",
+    "ink-table": "^3.1.0",
+    "ink-task-list": "^2.0.0",
+    "model-context-protocol": "^1.0.2",
+    "react": "^19.1.0",
+    "redoc-express": "^2.1.0",
+    "swagger-ui-express": "^5.0.1",
+    "winston": "^3.17.0"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.2",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.1",
+    "@types/node": "^22.14.1",
+    "@types/supertest": "^6.0.3",
+    "@types/swagger-ui-express": "^4.1.8",
+    "@typescript-eslint/eslint-plugin": "^8.30.1",
+    "@typescript-eslint/parser": "^8.30.1",
+    "@vitest/coverage-v8": "^0.33.0",
+    "@vitest/ui": "^0.33.0",
+    "eslint": "^9.24.0",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-prettier": "^5.2.6",
+    "husky": "^9.1.7",
+    "is-ci": "^4.1.0",
+    "lint-staged": "^15.5.1",
+    "nodemon": "^3.1.9",
+    "prettier": "^3.5.3",
+    "rimraf": "^6.0.1",
+    "supertest": "^7.1.0",
+    "swagger-cli": "^4.0.4",
+    "ts-node": "^10.9.2",
+    "ts-node-dev": "^2.0.0",
+    "typescript": "^5.8.3",
+    "vitest": "^0.33.0"
+  },
+  "lint-staged": {
+    "*.ts": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    ".changeset/**/*.md": [
+      "prettier --write"
+    ]
+  },
+  "pnpm": {
+    "peerDependencyRules": {
+      "allowAny": [],
+      "ignoreMissing": []
+    }
+  }
+}

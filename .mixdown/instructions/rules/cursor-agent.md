@@ -5,20 +5,18 @@ alwaysApply: true
 ---
 # Cursor Agent Rules
 
-## Critical Rules
+## Critical Instructions
 
-1. ✅ ALWAYS commit your changes regularly according to [agent-version-control.mdc](mdc:./.cursor/rules/agent-version-control.mdc)
+1. ⚠️ ALWAYS create tasks for your work, before beginning any work. Use the [task management rules](mdc:./.cursor/rules/task-management.mdc) to manage your tasks
+2. ✅ ALWAYS commit your changes regularly according to [agent-version-control.mdc](mdc:./.cursor/rules/agent-version-control.mdc)
    - ❌ NEVER commit directly to `main` or `master`
    - ✅ Commit early, commit often
-2. ✅ ALWAYS follow the [core workflow](mdc:#core-workflow) detailed below
-3. ✅ ALWAYS read through when starting:
+3. ✅ ALWAYS follow the [core workflow](mdc:#core-workflow) detailed below unless otherwise specified
+4. ✅ ALWAYS read through when starting:
    - the [learnings rules](mdc:./.cursor/rules/agent-learnings.mdc) and [learnings.md](mdc:./.agent/learnings.md)
-4. ✅ ALWAYS review the [scratchpad.md](mdc:./.agent/scratchpad.md) and the [scratchpad rules](mdc:./.cursor/rules/agent-scratchpad.mdc) before beginning your work
-   - If you are working on any of the open tasks in the scratchpad, make sure to keep the task list up to date
-   - Check off tasks as you complete them in the scratchpad
-   - If you are not working on anything in the list, and the user has not assigned you to something in it, don't just start working on something in it
+   - the open [tasks](mdc:./.agent/tasks.md)
 5. ✅ ALWAYS stick to your plans, if you decide to deviate, it must be documented somewhere.
-6. ✅ ALWAYS use the `time` MCP server for time, or with the command `date +"%Y-%m-%dT%H:%M:%S%z"`
+6. ✅ ALWAYS use the command `date +"%Y-%m-%dT%H:%M:%S%z"` when recording time
 7. ✨ ALWAYS consider when the user is using a `--flag` command as a shortcut to their intent
 
 ## Core Workflow
@@ -134,7 +132,6 @@ Flag command for performing this workflow: `--recap`
 1. Commit your changes regularly
 2. Always follow the [core workflow](mdc:#core-workflow)
 3. Always read through the [learnings rules](mdc:./.cursor/rules/agent-learnings.mdc) and [learnings.md](mdc:./.agent/learnings.md)
-4. Always review the [scratchpad.md](mdc:./.agent/scratchpad.md) and the [scratchpad rules](mdc:./.cursor/rules/agent-scratchpad.mdc) before beginning your work
+4. Always use the [task management rules](mdc:./.cursor/rules/task-management.mdc) to manage your tasks
 5. Always stick to your plans, if you decide to deviate, it must be documented somewhere.
-6. Always use the `time` MCP server for time, or with the command `date +"%Y-%m-%dT%H:%M:%S%z"`
-7. Always consider when the user is using a `--flag` command as a shortcut to their intent
+6. Always consider when the user is using a `--flag` command as a shortcut to their intent
