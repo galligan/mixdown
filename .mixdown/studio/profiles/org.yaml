@@ -1,0 +1,8 @@
+# Mixdown Organization/Company Profile
+
+org:
+  name: "Maybe Good Systems" # name of the organization/company
+  email: "hi@maybegoods.com" # email address of the organization/company
+  default_toolset: ["cursor", "roo-code", "claude-code"] # default toolset of the organization/company
+# timezone: "America/New_York" # timezone of the organization/company
+# language: "en" # language of the organization/company

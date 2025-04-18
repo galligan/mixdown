@@ -1,0 +1,9 @@
+# Mixdown User Profile
+
+user:
+  name: "Matt Galligan" # name of the user
+  email: "matt@mixdown.dev" # email address of the user
+  company: "Mixdown" # company of the user
+  timezone: "America/Los_Angeles" # timezone of the user
+  language: "en" # language of the user
+  default_toolset: ["cursor", "roo-code", "claude-code"] # default toolset of the user

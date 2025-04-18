@@ -1,0 +1,11 @@
+# Mixdown Project Profile
+
+project:
+  name: "Mixdown" # name of the project
+  email: "support@mixdown.dev" # email address for support requests
+  legal:
+    path: "./legal.mix.xml"
+    title: "Mixdown Legal"
+  privacy:
+    path: "./privacy.mix.xml"
+    title: "Mixdown Privacy Policy"
