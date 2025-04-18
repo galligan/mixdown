@@ -81,14 +81,21 @@ mixdown init
 
 This command will create a`.mixdown` directory within your project with the following structure:
 
-```
+```txt
 .mixdown/
-├── mixes/
-    ├── [mix-name].mix.xml
-├── output/
-├── templates/
-├── config.yaml
-└── README.md
+├── output/        # Generated output files
+│   ├── runs/      # Run-specific output files
+│   └── latest/    # Symlink to the latest output version
+├── scripts/       # Custom scripts for runtime splices
+├── studio/
+│   ├── mixes/     # Your mix files
+│   │   └── [mix-name].mix.xml
+│   ├── splices/   # Reusable content fragments
+│   │   └── [splice-name].mix.xml
+│   └── templates/ # Template files
+│       └── [template-name].mix.xml
+├── config.yaml    # Project configuration
+└── README.md      # Mixdown Documentation
 ```
 
 ## Creating Mixes
@@ -97,7 +104,7 @@ This command will create a`.mixdown` directory within your project with the foll
 
 Templates in Mixdown are called "Mixes". This is to avoid confusion with other terms like "prompts", "instructions", or "templates." Think of a mix as the "gold master" of a rule/instruction/prompt. Mixes use a specific syntax to define how the instructions should be written out to the directories of the tools you're using, in the format they're expecting. We use the `.mix.xml` extension to denote a Mixdown file.
 
-The default setup for a Mix (`./mixdown/mixes/[mix-name].mix.xml`) is:
+The default setup for a Mix (`./mixdown/studio/mixes/[mix-name].mix.xml`) is:
 
 ```xml
 <mixdown version="1.0.0">
@@ -142,6 +149,7 @@ Optional keys aren't required for Mixdown to work, but will be included in any t
   - Mixdown's globs implementation supports more complex patterns than what individual tools may support e.g. `**/*.{md,mdc,txt}`.
     - In these cases, Mixdown will parse the globs, and apply the appropriate tool-specific globs format when writing the files.
   - `type="mode"`: Modes are supported by some tools, which allow for agents to have entirely different sets of instructions e.g. "Architect," "Writer," "Coder," etc.
+  - `type="template"`: Templates define a specific format for an LLM to use to generate content. They are typically paired with rules or instructions to contextualize the desired output for the LLM.
 - `alwaysApply`: Whether the mix should always be applied.
 
 #### Tool Overrides
@@ -313,26 +321,90 @@ alwaysApply:
 
 A "splice" is used to inject content into a mix, from either the `.mixdown/splices` directory, an existing mix file, or from a stem contained within the same mix. This adds a significant amount of flexibility to your mixes, allowing for more dynamic and reusable prompts. Here's how they're formatted:
 
-- `$[splice:name]`: Injects the content of the splice file named `name.mix.xml` from the `.mixdown/splices` directory.
-- `$[splice:mix:name]`: Injects the content of the mix file named `name.mix.xml` from the `.mixdown/mixes` directory. When you do this, the mix content is included inline without consideration of the mix's `<meta>` section, `<stem>` tags, or any other mix-specific content.
-- `$[splice:stem:name]`: Injects the content of a stem named `name` contained within the same mix. This is handy to re-use content from elsewhere in the same mix, such as important instructions that may be useful in the top or bottom of a mix.
+- `$[s:name]`: Injects the content of the splice file named `name.mix.xml` from the `.mixdown/splices` directory.
+- `$[s:mix:name]`: Injects the content of the mix file named `name.mix.xml` from the `.mixdown/mixes` directory. When you do this, the mix content is included inline without consideration of the mix's `<meta>` section, `<stem>` tags, or any other mix-specific content.
+- `$[s:stem:name]`: Injects the content of a stem named `name` contained within the same mix. This is handy to re-use content from elsewhere in the same mix, such as important instructions that may be useful in the top or bottom of a mix.
+- `$[s:template:name]`: Injects the content of a template named `name` from the `.mixdown/templates` directory.
+- `$[splice path="path/to/file.md"]`: Injects the content of the file at `path/to/file.md` inline into the mix. We use the full `splice` keyword ensure Mixdown handles it correctly. 🚧 Any spliced in content will be sanitized to avoid potential security concerns.
 
 Splices also support re-writing the top-most heading from the source content, or removing it entirely. This is useful to avoid confusion when the source content has a heading that doesn't quite fit with the rest of the mix. Here's how it works:
 
-- `$[splice:name title="[## ]New Title"]`: This will rewrite the top-most heading of the source content with "new title". You don't need to include a `#` heading symbol in the title, but it's recommended to avoid confusion.
-- `$[splice:name title-none]`: This will remove the top-most heading from the source content.
+- `$[s:name title="[## ]New Title"]`: This will rewrite the top-most heading of the source content with "new title". You don't need to include a `#` heading symbol in the title, but it's recommended to avoid confusion.
+- `$[s:name title-none]`: This will remove the top-most heading from the source content.
+
+#### Profile Splices
+
+Profile splices are a way to inject content from a profile (personal, project, or org/company) into a mix. Examples:
+
+- `$[s:user.name]`: Injects the content of the `name` key in the `./mixdown/studio/profiles/user.yaml` file.
+- `$[s:project.legal]`: Injects the content of the `legal` key in the `./mixdown/studio/profiles/project.yaml` file.
 
 #### Example Splices
 
 ```md
 <!-- Rest of the mix above -->
-$[splice:legal]
+$[s:legal]
 ```
 
-This will inject the content of `./mixdown/splices/legal.mix.xml` into the mix. If no such file exists, Mixdown will warn and skip the splice. It can also be configured to fail the build if a splice is missing or by using the `--strict` flag.
+This will inject the content of `./mixdown/studio/splices/legal.mix.xml` into the mix. If no such file exists, Mixdown will warn and skip the splice. It can also be configured to fail the build if a splice is missing or by using the `--strict` flag.
 
 > [!NOTE]
 > 💽 **SPLICE**: In audio production, a "splice" refers to the technique of joining two separate pieces of audio tape or digital audio segments together. Similarly, in Mixdown, splices allow you to join different content pieces together, injecting content from external files or other parts of your mix to create a cohesive final output.
+
+### Mixdown Aliases
+
+Aliases can be created in `./mixdown/config.yaml` to expand the value when a splice is used e.g. `[a:my-alias]` would expand to the value of the `alias.my-alias` key in `./mixdown/config.yaml`. Example:
+
+```yaml
+# ./mixdown/config.yaml
+
+aliases:
+  my-alias: "Mixdown is awesome!"
+```
+
+Will go like this:
+
+```md
+<!-- Rest of the mix above -->
+$[a:my-alias]
+
+<!-- Which will be written into the output files as: -->
+Mixdown is awesome!
+```
+
+You can also make use of a profile configuration in `./mixdown/studio/profiles`. For example:
+
+```yaml
+# ./mixdown/config.yaml
+
+aliases:
+  legal: "[s:project.privacy]"
+
+# ./mixdown/studio/profiles/project.yaml
+
+project:
+  legal:
+    path: "./privacy.mix.xml"
+    title: "Lumon Privacy Policy"
+```
+
+Will go like this:
+
+```md
+<!-- Rest of the mix above -->
+$[a:legal]
+
+<!-- Is interpreted as: -->
+$[splice path="./privacy.mix.xml" title="Company Privacy Policy"]
+
+<!-- Which will be written into the output files as: -->
+## Lumon Privacy Policy
+
+Our privacy policy is available at [https://lumon.com/privacy](https://lumon.com/privacy).
+
+```
+
+Note in the above example that the YAML key `legal` has `path` and `title` keys. Any keys that correspond to a splice attribute will see their values used as the attribute's value. 
 
 ## TODOS (build, and documentation)
 
@@ -354,7 +426,7 @@ This will inject the content of `./mixdown/splices/legal.mix.xml` into the mix. 
    - Expose a `toolProvider` interface (`resolvePath(), renderTemplate(), etc.) so the community can PR support for as-yet-unsupported tools.
    - Keep core small; ship extra providers as optional npm packages e.g. `@mixdown/tool-cursor`, `@mixdown/tool-godmode`, etc.
 4. Content-aware helpers
-   - Runtime inserts as splices: You can use built-in functions like `$[splice:@git_branch]`, `$[splice:@project-name]`, `$[splice:@user-name]`, `$[splice:@random-uuid]`, etc. We'll use one sigil `$` to denote a splice and distinguish them from placeholders.
+   - Runtime inserts as splices: You can use built-in functions like `$[s:@git_branch]`, `$[s:@project-name]`, `$[s:@user-name]`, `$[s:@random-uuid]`, etc. We'll use one sigil `$` to denote a splice and distinguish them from placeholders.
      - The `@` is used to denote a runtime splice, and is used to distinguish them from static splices. They will be resolved at runtime, and will include the current state of the project.
      - You can use the values from the `<meta>` section of a mix to populate a splice.
      - Runtime splices can also be configured in `./mixdown/config.yaml` to set project-default values, or trigger scripts to run contained in `./mixdown/scripts`.
