@@ -1,6 +1,3 @@
-# mixdown directory inclusion
-!/mixdown
-
 # dependencies
 /node_modules
 /.pnp
@@ -38,7 +35,15 @@ yarn-error.log*
 .env
 
 # private files
-notes/
+/notes
+
+# mixdown directory inclusion
+!/.mixdown
+.mixdown/output/
+!.mixdown/output/runs/**/*report.json
+
+# agent directory inclusion
+!/.agent/*
 
 # vercel
 .vercel
