@@ -12,7 +12,7 @@
   - Rename the plan file to `[completion-timestamp format="YYYY-MM-DD"]-[task-plan-description].md`
   - Update the plan link in the Completed section
 
-## Example Task List
+## Example Task Listpro
 
 ```md
 ## In Progress
@@ -35,7 +35,7 @@
 
 ## 🟡 In Progress Tasks
 
-- [ ] Project: Mixdown MVP Task Plan ([ref](./.agent/plans/mixdown-mvp-tasks.md))
+- [ ] [Project: Mixdown MVP Task Plan](./.agent/plans/mixdown-mvp-tasks.md)
 
 ## 🔵 Future Tasks
 
@@ -43,6 +43,7 @@
 
 ## 🟢 Completed Tasks
 
+- [x] Project: Mixdown MVP Task Plan ([ref](./.agent/plans/mixdown-mvp-tasks.md))
 - [x] Clean up package.json dependencies ([ref](./.agent/plans/completed/2025-04-18-package-json-cleanup-plan.md)) (completed 2025-04-18T10:03:40-0400)
   - [x] Create backups of package.json and pnpm-lock.yaml files (completed 2025-04-18T10:03:01-0400)
   - [x] Create simplified package.json with essential dependencies (completed 2025-04-18T10:03:22-0400)

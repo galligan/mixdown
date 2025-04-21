@@ -1,3 +1,5 @@
+# Mixdown MVP Task Plan
+
 ## Context
 
 - **Goal**: Deliver a Minimum Viable Product of Mixdown that can compile a single `.mxml` mix into tool‑specific instruction files, starting with Cursor (`.mdc`) and Claude Code (`CLAUDE.md`), via both CLI and HTTP API.
@@ -9,7 +11,7 @@
 
 ### In Progress
 
-- [ ] Task plan added to `./.agent/tasks.md` under appropriate section
+- [ ] Add task plan to `./.agent/tasks.md` under appropriate section
 
 ### Next Tasks
 
@@ -45,10 +47,10 @@
 
 ### Cleanup?
 
-- [ ] Docs written (if applicable)
-- [ ] Tests written (if applicable)
-- [ ] Tests passed (if applicable)
-- [ ] Changes checked in to appropriate branch (if applicable)
+- [ ] Docs written
+- [ ] Tests written
+- [ ] Tests passed
+- [ ] Changes checked in to `release/v0.1.0-mvp`
 
 ## Follow-up Notes
 

@@ -1,5 +1,10 @@
 # 2024-06-17 Project: Mixdown MVP
 
+## Context
+
+- **Project doc:** [project-mvp.md](../../projects/project-mvp.md)
+- **Task plan:** [mixdown-mvp-tasks.md](../../.agent/plans/mixdown-mvp-tasks.md)
+
 ## Overview
 
 - **Objective:** Deliver a Minimum Viable Product of Mixdown that can compile a single `.mxml` mix into tool‑specific instruction files, starting with Cursor (`.mdc`) and Claude Code (`CLAUDE.md`), via both CLI and HTTP API.
