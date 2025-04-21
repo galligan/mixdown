@@ -1,0 +1,129 @@
+# prompts/mixdown.config.yaml
+# -------------------------------------------------------------------
+# Global settings for the Mixdown compiler / CLI.
+# Most keys are optional; uncomment / tweak as your repo evolves.
+# -------------------------------------------------------------------
+
+# ---------- project configuration ------------------------------------
+project:
+  name: mixdown
+  default_tools: ["cursor", "windsurf", "claude-code"] # fallback if a mix omits include/exclude
+  default_output_type: rule                            # "rule" | "command" | "prompt"
+
+# ---------- aliases --------------------------------------------------
+  aliases:                        # expands the value when $[alias] is used
+    legal: "[include:project.legal]" # injects the value for the `legal` key in the `project` profile
+    privacy: "[include:project.privacy]"
+
+# ---------- Mixdown configuration ------------------------------------
+mixdown:
+
+  # ---------- directory layout ---------------------------------------
+  source_dir: prompts           # root directory that contains instructions, includes, templates, etc.
+  public_dir: artifacts         # where artifacts are stored (relative to source_dir)
+  builds_dir: builds            # where build artifacts are stored (relative to public_dir)
+  # The CLI will resolve:
+  #   build_store = path.join(source_dir, public_dir, builds_dir)
+  #   latest_link = path.join(source_dir, public_dir, "latest")
+
+  # ---------- build lifecycle ----------------------------------------
+  keep_builds: 7                # garbage‑collect older builds; 0 = keep all
+  build_pattern: "yyyyMMdd-HHmmss'Z'" # build‑id naming (use 'build-{hash}' if preferred)
+  symlink_mode: latest          # none | latest | all
+
+  # ---------- reports ------------------------------------------------
+  reports:
+    keep_reports: true          # still write runs/<id>/report.json even in --dry-run
+    dir: .mixdown/reports # where reports are stored (relative to project root)
+
+  # ---------- outputs ------------------------------------------------
+  naming:
+    label_affix:
+      scope: all                  # default: all | first | last | 2, 3, etc.
+      placement: prefix           # prefix | suffix
+      separator: "-"              # single char: "-" | "_" | "."
+      # default behavior:
+      #   labels: [docs, api]  ->  docs-api-auth.mdc
+
+    path_affix:                   # prepend/append sub‑folder names to filename
+      depth: 0                    # 0 = off (default), 1 = last dir, 2 = last‑2 dirs …
+      placement: prefix           # prefix | suffix
+      separator: "-"              # single char: "-" | "_" | "."
+      # note: not applied to path-located files e.g. CLAUDE.md
+      # examples (mix at prompts/instructions/docs/api/auth.mixd):
+      #   depth: 0, off     -> auth.mdc
+      #   depth: 1, prefix  -> api-auth.mdc
+      #   depth: 2, suffix  -> auth-docs-api.mdc
+      #   depth: 3, prefix  -> docs-api-auth.mdc (instructions path is excluded)
+
+# ---------- development ----------------------------------------------
+dev:
+  validator:
+    strict: false                 # true = fail build on any warning
+    ignore_unknown_tags: true     # true = allow custom XML tags without schema update
+    lint_placeholders: true       # warn on missing or malformed [...]/$[...] placeholders
+  cache:
+    enabled:      true
+    dir:    .mixdown/cache  # per‑user cache; CI can override
+    checksum_algo: sha256         # influences diff / skip‑build logic
+  ci:
+    fail_on_output_diff: true     # exits non‑zero if regenerated artifacts differ from main
+    diff_base: origin/main        # branch / commit to compare against
+  telemetry:
+    enabled: false                # CI can override with MIXDOWN_TELEMETRY=1
+
+# ---------- includes -------------------------------------------------
+includes:
+  runtime:                      # $[include:@...] built‑ins
+    enabled: true
+    allow_shell_exec: false     # safeguard; set true if you trust commands like $[git_branch]
+    builtins:
+      git_branch: 'git rev-parse --abbrev-ref HEAD'
+      package_version: "node -p \"require('./package.json').version\""
+      random_uuid: uuidgen
+
+# ---------- plugins --------------------------------------------------
+plugins:
+  search_paths:                 # interpreted relative to this file; use absolute if you need workspace root.
+    - ../node_modules
+    - ../packages             # monorepo workspace
+
+  # ---------- Cursor -------------------------------------------------
+  "@mixdown/plugin-cursor":
+    enabled: true
+    dir: .cursor         # project‑relative base for this tool
+    types:
+      rule:                      # -> .cursor/rules/{rule-name}.mdc
+        # output:                # change to override the default output
+        #   dir: rules
+        #   extension: mdc
+        # path_affix:          
+        #   depth: 0            # Turn on path affixing for Cursor-only
+
+  # ---------- Roo Code -----------------------------------------------
+  "@mixdown/plugin-roo-code":
+    enabled: true
+    dir: .roo
+    types:
+      mode_rule:                 # .roo/rules-{mode}/{rule-name}.md
+        output:
+          dir: rules
+          extension: md
+
+  # ---------- Claude Code --------------------------------------------
+  "@mixdown/plugin-claude-code":
+    enabled: true
+    dir: .                 # writes into repo root by default
+    types:
+      rule:                      # -> ./CLAUDE.md
+        # single‑file tool; default file is CLAUDE.md in repo root
+      command:
+        output:
+          dir: .claude/commands
+          extension: md          # -> .claude/commands/{command-name}.md
+
+  # ---------- OpenAI Codex CLI ---------------------------------------
+  "@mixdown/plugin-codex-cli":
+    enabled: true
+    dir: .
+    # default single‑file codex.md; override with 'types.rule.output.file:' only if needed
