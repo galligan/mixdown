@@ -11,6 +11,8 @@ Well, if you're reading this, you're probably already familiar with at least one
 
 The problem is, they all have different formats, behavior, and capabilities, which can become a huge pain to manage. This can be frustrating, and might even lead you to just sticking to one tool. But that's no fun, and you'll be missing out on all the awesome capabilities and differences each tool has to offer! That's where Mixdown comes in…
 
+**Terminology note**: Mixdown uses the term **artifact** to mean the concrete file(s) it emits for each target tool (Cursor rules, Claude commands, etc.). You’ll find them in `prompts/artifacts/`.
+
 With Mixdown, you can apply the "Don't Repeat Yourself" principle to your agentic code tools' rules files, instructions, etc. Instead of writing slightly different versions of the same instructions for each tool, you create a single "mix" file. A mix is the "gold master" for your instructions, from which individual tool-specific files are created in their respective format, to the appropriate places, etc.
 
 <!-- TODO: Maybe consider this as an alternative -->
@@ -68,6 +70,17 @@ Follow the prompts to:
 
 For more detailed information on using Changesets in this project, see [docs/CHANGESETS.md](/docs/CHANGESETS.md).
 
+## Glossary of Terms
+
+- **Mix**: A "mix" is the template used to generate files from. Think of it as the "main" instruction set, from which tool-specific artifacts are created. Mixes use the `.mixd` extension.
+- **Artifact**: An "artifact" is the file(s) that are created from a mix in a specific tool's format e.g. `.mdc` for Cursor Rules, `.md` for Roo Code, etc.
+- **Segment**: A "segment" is a mix that is embedded within another mix. It's used to split a mix into smaller, more manageable pieces. Segments use the `<segment>` tag.
+- **Include**: An "include" is used to inject content into a mix, from either the `./prompts/includes` directory or from a segment contained within the same mix. Includes use the `$[include:name]` syntax.
+- **Override**: An "override" is used to add tool-specific instructions to a mix, which will be written to the declared tool's artifact file. Overrides use the `<override>` tag.
+- **Placeholder**: A value token that will provide an LLM instructions to fill in the value. Placeholders use the `[name]` syntax.
+- **Alias**: An "alias" is a key-value pair that can be used to expand the value when an include is used e.g. `[alias:my-alias]` would expand to the value of the `alias.my-alias` key in `./prompts/mixdown.config.yaml`.
+- **Profile/Data**: YAML-formatted serialized data files that can be used to inject content into a mix. Profiles use the `.profile.yaml` extension, while data files use the `.data.yaml` extension.
+
 ## Quick Start
 
 ### Set up Mixdown within a project
@@ -76,24 +89,30 @@ For more detailed information on using Changesets in this project, see [docs/CHA
 mixdown init
 ```
 
-This command will create a`.mixdown` directory within your project with the following structure:
+This command will create the directories `prompts` and `.mixdown` within your project with the following structure:
 
 ```txt
-./prompts/
-├── output/                                 # Generated output files
-│   ├── runs/                               # Run-specific output files
-│   └── latest/                             # Symlink to the latest output version
-├── scripts/                                # Custom scripts for runtime includes
-├── instructions/                           # Your mix files
-│   └── [mix-name].mixd
-├── includes/                               # Reusable content as includes
-│   ├── [include-name].include.mixd         # 
-│   ├── [profile-name].profile.yaml
-│   └── *.[md,txt,json,ts]                  # Other text-based files you want to include in your project e.g. .md, .txt, .json, .ts, etc.
-└── templates/                              # Template files
-    └── [template-name].template.mixd
-├── mixdown.config.yaml                     # Mixdown project configuration
-└── README.md                               # Mixdown Documentation
+project-root/
+├── prompts/
+│   ├── artifacts/                              # Generated artifacts
+│   │   ├── builds/                             # Build-specific artifacts
+│   │   └── latest/                             # Symlink to the latest artifact set
+│   ├── instructions/                           # Your mix files
+│   │   ├── [mix-name].mixd                     # Your mix file
+│   │   └── [directory-name]/                   # Optional nested instruction directories
+│   │       └── [mix-name].mixd                 # A mix file within a nested directory
+│   ├── includes/                               # Reusable content as includes
+│   │   ├── [include-name].include.mixd         # Reusable content for your mixes
+│   │   ├── [profile-name].profile.yaml         # Serialized profile data you can include in your mixes
+│   │   └── *.[md,txt,json,ts]                  # Other text-based files you want to include in your mixes e.g. .md, .txt, .json, .ts, etc.
+│   └── templates/                              # Template files
+│       └── [template-name].template.mixd
+├── .mixdown/                                   # Mixdown directory
+│   ├── cache/                                  # Mixdown cache directory
+│   ├── reports/                                # Mixdown reports directory
+│   ├── scripts/                                # Mixdown scripts directory
+│   ├── config.yaml                             # Mixdown project configuration
+│   └── README.md                               # Mixdown Documentation
 ```
 
 ## Creating Mixes
@@ -140,9 +159,10 @@ Supported keys are:
 
 Optional keys aren't required for Mixdown to work, but will be included in any tool's instructions files that support them. They can be overridden by tool-specific keys, which are defined below.
 
-- `include` (optional): A list of tools that Mixdown should output files for.
-- `exclude` (optional): A list of tools that Mixdown should not output to.
-- `type=[rule,command,mode,template]` (optional): The format of output you'd like the mix to be written as.
+- `labels`: A list of labels to apply to the mix (can be used for filtering, file-naming, etc.).
+- `include` (optional): A list of tools that Mixdown should create artifacts for.
+- `exclude` (optional): A list of tools that Mixdown should not create artifacts for.
+- `type=[rule,command,mode,template]` (optional): The type of artifact you'd like the mix to be written as.
   - `type="rule"` (default): The mix will be written as a rule (e.g. for Cursor Rules).
   - `type="command"`: The mix will be written as a command (e.g. for Claude Code).
   - `type="mode"`: Modes are supported by some tools, which allow for agents to have entirely different sets of instructions e.g. "Architect," "Writer," "Coder," etc.
@@ -201,13 +221,13 @@ Example:
 
 ### Section Tags
 
-**Section Tags** are xml-like tags used within mixes, instructions, and templates to delineate different aspects of a prompt, content, or document. The can help LLMs separate aspects of a prompt and avoid conflating unrelated context, leading to more accurate and reliable results. XML has been proven to be a reliable way to structure prompts and see more consistent results (see the [GPT-4.1 Prompting Guide](https://cookbook.openai.com/examples/gpt4-1_prompting_guide) for example).
+**Section Tags** are xml-like tags used within mixes, instructions, and templates to delineate different aspects of a prompt, content, or document. These can help LLMs separate aspects of a prompt and avoid conflating unrelated context, leading to more accurate and reliable results. XML has been proven to be a reliable way to structure prompts and see more consistent results (see the [GPT-4.1 Prompting Guide](https://cookbook.openai.com/examples/gpt4-1_prompting_guide) for example).
 
 There are some common XML tags that we use in Mixdown:
 
 - `<system>`: A system prompt
 - `<instructions>`: A set of instructions for the AI to follow
-- `<example>`: An example response to guide the AI's output
+- `<example>`: An example response to guide the AI's response output
   - `<good_example>` and `<bad_example>` can be used to illustrate examples of good (correct) and bad (incorrect) responses, respectively.
 - `<formatting>`: Formatting instructions
 - Chain of thought prompting can be done by using `<thinking>` and `<answer>` tags.
@@ -240,26 +260,26 @@ You are a helpful assistant that can answer questions and help with tasks. The u
 
 The example above could be a complete AI prompt. In it we're using both section tags and placeholders. The placeholders are used to tell the LLM which values to use in the document, and the section tags are there to distinguish different aspects or instructions for the LLM.
 
-### Splitting Mixes with Segments
+### Segmenting Mixes
 
-One special feature of Mixdown is the ability to have a single mix file that can be split and written into multiple rules/instructions, with options for when to do the splitting. These are called segments. You can think of these as mixes themselves, but embedded a "parent" mix. This is useful for when you're setting up instructions for different coding agents, where one may prefer to have a single instruction, while another may prefer to have them broken down into multiple sections.
+One special feature of Mixdown is the ability to have a single mix file that can be split and written into multiple rules/instructions, with options for when to do the segmentation. You can think of segments as mixes themselves, but embedded within a "parent" mix. They're useful for when you're setting up instructions for different coding agents, where one may prefer to have a single instruction, while another may prefer to have them broken down into multiple sections.
 
-To add a split to a mix, you can use the `<segment>` tag. Attributes are included within the tag to specify conditions for creating new files, whether or not to include them in certain rules files for specific tools, and more.
+To add a split to a mix, you can use the `<segment>` tag. Attributes are included within the tag to specify conditions for creating new artifacts, whether or not to include them in certain rules files for specific tools, and more.
 
 When including a segment in a mix, you'll need to give it a name, and use one or more of the following attributes for it to work: `export`, `skip`, `only`, or `type`.
 
 #### Segment Attributes
 
-- `name` (required): The name of the segment. This will be used to name the file that is created when the mix is split. The files will be written to their respective tool's directory with its preferred file extension.
+- `name` (required): The name of the segment. This will be used to name the file that is created when the mix is split. The files will be written to their respective tool's `prompts/artifacts` directory with its preferred file extension.
   - Example: `<segment name="code-quality">` would create `.cursor/rules/code-quality.mdc` for Cursor, and `.roo/rules/code-quality.md` for Roo Code.
   - `name[:tool-name]`: You can use a `:` as a namespace to specify tool-specific alternative names for written files. You can specify one or more tools by using a colon, followed by the tool's name e.g. `name:cursor="code-quality-rules" name:claude-code="code-quality"`.
-- `title[:tool-name]`: The title of the segment. This will be used as a title at the top of the output files, likely as a `# H1 Heading`. By default the title will output with the first letter of the title capitalized. Otherwise, formatting will be preserved.
+- `title[:tool-name]`: The title of the segment. This will be used as a title at the top of the segment artifact, likely as a `# H1 Heading`. By default the title will output with the first letter of the title capitalized. Otherwise, formatting will be preserved.
 - `skip="[tool-name-1,tool-name-2]"`: This attribute indicates that a segment should not get written to a tool's instructions. It's populated with a comma-separated list of tool names.
   - Example: `skip="cursor"` would mean that when writing the mix to Cursor Rules, this particular segment would not be included.
-- `export="[tool-name-1,tool-name-2]"`: Exporting a segment means that the segment will be skipped in the mix's final output, and will be written as a separate file. This is handy when you want to write instructions in a comprehensive way, but ultimately want to have separate files for each tool to work with.
+- `export="[tool-name-1,tool-name-2]"`: Exporting a segment means that the segment will not be included in the specific mix's artifact, and will be written instead as separate artifacts. This is handy when you want to write instructions in a comprehensive way, but ultimately want to have separate files for each tool to work with.
   - You can also include specific tools to export the segment for: `<segment name="my-rule" export="cursor,roo">`. This will create a file called `my-rule.[md,mdc]` in the each tool's respective directories, but only for Cursor and Roo Code.
-- `only`: Only is a shortcut for `export` that will create a separate segment file called `my-rule.[md,mdc]` in all target directories, and skip the segment's content from being included in the main mix output files.
-- `type[:tool-name]`: This attributes allows you to specify the "type" of output you'd like the segment to be written as (e.g. `rule`, `command`, `mode`, `template`). You can specify one or more tools by using a colon, followed by the tool's name e.g. `type:cursor="rule" type:claude-code="command"`.
+- `only`: Only is a shortcut for `export` that will create a separate segment file called `my-rule.[md,mdc]` in all target directories, and skip the segment's content from being included in the artifacts.
+- `type[:tool-name]`: This attributes allows you to specify the "type" of artifact you'd like the segment to be written as (e.g. `rule`, `command`, `mode`, `template`). You can specify one or more tools by using a colon, followed by the tool's name e.g. `type:cursor="rule" type:claude-code="command"`.
 
 **Attribute Namespaces:**
 
@@ -267,7 +287,7 @@ The `name`, `title`, and `type` attributes allow for the use of a `:` as a names
 
 #### Formatting Exported Segments
 
-When exporting a segment, Mixdown will re-write the headings within the content of the segment to ensure the resulting output file is formatted with correct heading levels. Note: this will not apply to content that's in code blocks or within `<template>` tags.
+When exporting a segment, Mixdown will re-write the headings within the content of the segment to ensure the resulting artifact file is formatted with correct heading levels. Note: this will not apply to content that's in code blocks or within `<template>` tags.
 
 #### Segment Example
 
@@ -292,8 +312,8 @@ Example:
 <override>
 <cursor>
 ---
-description: 
-globs: 
+description:
+globs:
 alwaysApply:
 ---
 </cursor>
@@ -336,8 +356,8 @@ This will inject the content of `./prompts/includes/legal.mixd` into the mix. If
 Data/profile includes are a way to inject content from a YAML-formatted serialized data file such as a "profile" (personal, project, or org/company) into a mix.
 
 - `data` and `profile` are interchangeable, but both are supported to help organize your includes.
-  - When using `$[data:foo]`, Mixdown will look for `.prompts/includes/foo.data.yaml`
-  - When using `$[profile:bar]`, Mixdown will look for `.prompts/includes/bar.profile.yaml`
+  - When using `$[data:foo]`, Mixdown will look for `./prompts/includes/foo.data.yaml`
+  - When using `$[profile:bar]`, Mixdown will look for `./prompts/includes/bar.profile.yaml`
 
 Examples:
 
@@ -346,10 +366,10 @@ Examples:
 
 ### Mixdown Aliases
 
-Aliases can be created in `./prompts/mixdown.config.yaml` to expand the value when an include is used e.g. `[alias:my-alias]` would expand to the value of the `alias.my-alias` key in `./prompts/mixdown.config.yaml`. Example:
+Aliases can be created in `./prompts/mixdown.config.yaml` to expand the value when an include is used e.g. `[alias:my-alias]` would expand to the value of the `alias.my-alias` key in `./prompts/.mixdown/config.yaml`. Example:
 
 ```yaml
-# ./prompts/mixdown.config.yaml
+# ./prompts/.mixdown/config.yaml
 
 aliases:
   my-alias: "Mixdown is awesome!"
@@ -361,14 +381,14 @@ Will go like this:
 <!-- Rest of the mix above -->
 $[alias:my-alias]
 
-<!-- Which will be written into the output files as: -->
+<!-- Which will be written into the artifacts as: -->
 Mixdown is awesome!
 ```
 
 You can also make use of a profile configuration in `./prompts/includes/[profile-name].profile.yaml`. For example:
 
 ```yaml
-# ./prompts/mixdown.config.yaml
+# ./prompts/.mixdown/config.yaml
 
 aliases:
   legal: "[include:project.privacy]"
@@ -390,24 +410,24 @@ $[alias:legal]
 <!-- Is interpreted as: -->
 $[include path="./prompts/includes/privacy.mixd" title="Company Privacy Policy"]
 
-<!-- Which will be written into the output files as: -->
+<!-- Which will be written into the artifacts as: -->
 ## Lumon Privacy Policy
 
 Our privacy policy is available at [https://lumon.com/privacy](https://lumon.com/privacy).
 ```
 
-Note in the above example that the YAML key `legal` has `path` and `title` keys. Any keys that correspond to an include attribute will see their values used as the attribute's value.
+Note: in the above example that the YAML key `legal` has `path` and `title` keys. Any keys that correspond to an include attribute will see their values used as the attribute's value.
 
 ## TODOS (build, and documentation)
 
 <!-- TODO: Add a section here explaining how Mixdown works. Going to stub it out for now -->
 
-1. SHA-256 of rendered files
+1. SHA-256 of rendered artifacts
 2. Compiler / validation layer
    - Schema linting: Mixdown will lint `.mixd` files to ensure they're valid. Surfacing errors and warnings to the user (unknown tags, bad placeholders, unknown attributes, etc.)
    - Dry-run preview: `mixdown preview --tool cursor` will output a preview of the would-be Cursor .mdc rules files, so the user can review it before it's written.
-   - Round-trip tests: snapshot generated files and fail CI if output drift occurs without a corresponding change to the mix.
-   - Build: final mix output is performed with `mixdown build`. This will write the final mix outputs to their respective destinations. A build report is saved as a JSON file in the `./mixdown/output/latest` directory (a symlink to the latest version). It includes the following information:
+   - Round-trip tests: snapshot generated artifacts and fail CI if artifact drift occurs without a corresponding change to the mix.
+   - Build: final mix artifact build is performed with `mixdown build`. This will write the final mix artifacts to their respective destinations. A build report is saved as a symlink `./prompts/artifacts/latest/report.json` to the latest build's report. It includes the following information:
      - The mix's name, version, and hash ID of the mix's content
      - The date and time the mix was published
      - A list of tools the mix was written to
@@ -421,12 +441,12 @@ Note in the above example that the YAML key `legal` has `path` and `title` keys.
    - Runtime inserts as includes: You can use built-in functions like `$[include:@git_branch]`, `$[include:@project-name]`, `$[include:@user-name]`, `$[include:@random-uuid]`, etc. We'll use one sigil `$` to denote an include and distinguish them from placeholders.
      - The `@` is used to denote a runtime include, and is used to distinguish them from static includes. They will be resolved at runtime, and will include the current state of the project.
      - You can use the values from the `<meta>` section of a mix to populate an include.
-     - Runtime includes can also be configured in `./mixdown/mixdown.config.yaml` to set project-default values, or trigger scripts to run contained in `./mixdown/scripts`.
+     - Runtime includes can also be configured in `./prompts/.mixdown/config.yaml` to set project-default values, or trigger scripts to run contained in `./prompts/.mixdown/scripts`.
    - LLM test harness: run each generated prompt against a chosen model with canned inputs; flag large response deltas to highlight prompt regressions.
 5. Security & sandbox
    - XML + string interpolation invites XSS attacks; sanitize all content before writing to disk
    - Use `fast-xml-parser` to parse XML content with `ignoreEntities: true`
-   - For placeholders that shell out to a command e.g. `
+   - For placeholders that shell out to a command e.g. `[date format="YYYY-MM-DD"]`, we'll use `child_process` to execute the command and return the output.
 6. UI / DX
    - Define CLI
    - Define MCP server
@@ -437,8 +457,3 @@ Note in the above example that the YAML key `legal` has `path` and `title` keys.
 8. Interop with MCP
    - Since we already lean on MCP, expose a GET /mixes/:tool route so any agent in the Mixdown ecosystem can fetch fresh rules before spawning
    - Optionally embed a checksum header so agents can skip download if nothing changed.
-
-### Backlog
-
-- "Takes": version/tag of a mix, which could allow for A/B testing of mixes
-
