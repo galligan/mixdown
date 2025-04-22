@@ -35,6 +35,7 @@
 
 ## 🟡 In Progress Tasks
 
+- [ ] Task: Update notes/updates-to-mvp.md with terminology change clarification ([ref](notes/updates-to-mvp.md))
 - [ ] [Project: Mixdown MVP Task Plan](./.agent/plans/mixdown-mvp-tasks.md)
 
 ## 🔵 Future Tasks
@@ -45,6 +46,7 @@
 
 ## 🟢 Completed Tasks
 
+- [x] Task: Update notes/updates-to-mvp.md with terminology change clarification ([ref](notes/updates-to-mvp.md)) (completed 2025-04-21T17:14:23-0400)
 - [x] Project: Mixdown MVP Task Plan ([ref](./.agent/plans/mixdown-mvp-tasks.md))
 - [x] Clean up package.json dependencies ([ref](./.agent/plans/completed/2025-04-18-package-json-cleanup-plan.md)) (completed 2025-04-18T10:03:40-0400)
   - [x] Create backups of package.json and pnpm-lock.yaml files (completed 2025-04-18T10:03:01-0400)

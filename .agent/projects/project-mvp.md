@@ -7,9 +7,9 @@
 
 ## Overview
 
-- **Objective:** Deliver a Minimum Viable Product of Mixdown that can compile a single `.mxml` mix into tool‑specific instruction files, starting with Cursor (`.mdc`) and Claude Code (`CLAUDE.md`), via both CLI and HTTP API.
+- **Objective:** Deliver a Minimum Viable Product of Mixdown that can compile a single `.mixd` mix into tool‑specific artifacts, starting with Cursor (`.mdc`) and Claude Code (`CLAUDE.md`), via both CLI and HTTP API.
 - **Scope:** Core compiler (`@mixdown/core`), two first‑party plugins (`@mixdown/plugin‑cursor`, `@mixdown/plugin‑claude-code`), CLI commands (`init`, `build`, `validate`), Express API endpoint (`POST /compile`), basic schema validation, and output writer to `.mixdown/output`.
-- **Expected Outcome:** Users can scaffold a project with `mixdown init`, author a mix, run `mixdown build` to generate rules, and CI can call `/compile` to retrieve a ZIP artifact. ≥80 % unit‑test coverage on core, contract tests for plugins, and clear documentation.
+- **Expected Outcome:** Users can scaffold a project with `mixdown init`, author a mix, run `mixdown build` to generate artifacts, and CI can call `/compile` to retrieve a ZIP artifact. ≥80 % unit‑test coverage on core, contract tests for plugins, and clear documentation.
 
 ## Status
 
@@ -40,8 +40,8 @@ Mixdown aims to solve instruction‑format fragmentation across multiple AI/agen
 
 | Option | Pros | Cons | Decision |
 |--------|------|------|----------|
-| Monolithic binary (no plugins) | Simpler build, fewer moving parts | Harder to extend, larger binary | Rejected |
-| Core + Plugin system (chosen) | Extensible, encourages ecosystem | Slightly higher complexity | **Selected** |
+| Monolithic binary (no providers) | Simpler build, fewer moving parts | Harder to extend, larger binary | Rejected |
+| Core + Plugin Provider system (chosen) | Extensible, encourages ecosystem | Slightly higher complexity | Selected |
 | Pure YAML syntax instead of XML | Familiar to some devs | Loses section‑tag clarity, harder for placeholders | Rejected |
 
 ## Implementation Plan
@@ -64,13 +64,13 @@ A simplified sequence diagram:
 
 ### Phase 2: Core Compiler MVP
 
-1. Implement XML + YAML front‑matter parser → AST.
+1. Implement XML parser (handling YAML front‑matter within `<meta>`) → AST.
    - **Complexity:** High
    - **Dependencies:** Phase 1 tooling
-   - Potential challenges: XML entity security, placeholder regex edge cases
-2. Implement track splitter & placeholder resolver.
+   - Potential challenges: XML entity security, placeholder/include regex edge cases
+2. Implement segment handler, placeholder resolver, include resolver.
    - **Complexity:** Medium
-3. Implement Writer that creates files in `.mixdown/output/runs/<id>` and `latest` symlink.
+3. Implement Writer that creates artifact files in `prompts/artifacts/builds/<id>` and `prompts/artifacts/latest` symlink.
    - **Complexity:** Medium
 
 ### Phase 3: Plugin Development
@@ -132,7 +132,7 @@ A simplified sequence diagram:
 ## Verification Process
 
 1. Run `pnpm -r test` – all tests must pass.
-2. Compile sample mix; outputs must match committed snapshots.
+2. Compile sample mix; artifacts must match committed snapshots.
 3. `mixdown build` on example repo completes in <250 ms (measured via CI).
 
 ## Proposed Tasks
@@ -147,37 +147,38 @@ A simplified sequence diagram:
      - [ ] Configure TypeScript base config
      - [ ] Add ESLint & Prettier configs
 2. Core Compiler Implementation
-   - **Description:** Implement mix parser, AST, writer.
+   - **Description:** Implement `.mixd` parser (handling `<meta>` YAML), AST, include/placeholder resolution, artifact writer.
    - **Complexity:** High
    - **Dependencies:** Task 1
-   - **Potential challenges:** XML parsing security, placeholder engine edge cases
+   - **Potential challenges:** XML parsing security, placeholder/include engine edge cases, segment handling logic.
    - **Subtasks:**
-     - [ ] XML + YAML parser to AST
-     - [ ] Placeholder resolver
-     - [ ] Writer with run ID & symlink setup
-3. Plugin Development
-   - **Description:** Build cursor & claude-code plugins.
+     - [ ] XML parser (handling `<meta>` tag YAML) to AST
+     - [ ] Placeholder & Include resolver (`[...]`, `$[include:...]`)
+     - [ ] Segment handler (`<segment>`)
+     - [ ] Writer to `prompts/artifacts/builds/<id>` with `latest` symlink setup
+3. Plugin Provider Development
+   - **Description:** Build `@mixdown/plugin-cursor` & `@mixdown/plugin-claude-code` providers.
    - **Complexity:** Medium
    - **Dependencies:** Task 2
-   - **Potential challenges:** Heading level adjustments
+   - **Potential challenges:** Heading level adjustments for exported segments, metadata mapping.
    - **Subtasks:**
-     - [ ] Cursor plugin render function
-     - [ ] Claude plugin render function
+     - [ ] Cursor provider render function
+     - [ ] Claude provider render function
 4. CLI Commands
    - **Description:** Implement `init`, `build`, `validate` using Ink + commander fallback.
    - **Complexity:** Medium
    - **Dependencies:** Task 2
    - **Potential challenges:** Interactive vs non‑interactive output
 5. API Endpoint
-   - **Description:** Express server with `/compile` returning ZIP.
+   - **Description:** Express server with `/compile` returning ZIP archive of artifacts.
    - **Complexity:** Medium
    - **Dependencies:** Task 2
 6. Testing & CI Setup
-   - **Description:** Unit, contract, E2E tests; GitHub Actions matrix.
+   - **Description:** Unit, contract (provider snapshot), E2E tests; GitHub Actions matrix.
    - **Complexity:** Medium
    - **Dependencies:** Tasks 2‑5
 7. Documentation
-   - **Description:** Update README, CLI docs, API Swagger.
+   - **Description:** Update README, CLI docs, API Swagger, Glossary, PRD.
    - **Complexity:** Low
    - **Dependencies:** Feature completion
 
@@ -189,4 +190,4 @@ A simplified sequence diagram:
 
 ## Appendix
 
-- Initial architecture diagram located in `docs/prd.md#6 System Architecture` 
+- Initial architecture diagram located in `docs/prd.md#6 System Architecture`
