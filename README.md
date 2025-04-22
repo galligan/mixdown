@@ -351,6 +351,30 @@ $[include:legal]
 
 This will inject the content of `./prompts/includes/legal.mixd` into the mix. If no such file exists, Mixdown will warn and skip the include. It can also be configured to fail the build if an include is missing or by using the `--strict` flag.
 
+#### Link Includes
+
+Linking from one rule file to another can get tricky when you're working across multiple tools. Mixdown solves for this with "link includes". They're a way to inject links to other mixes that will be rendered as a link in the final artifact, with the proper tool-specific formatting intact. They're formatted as follows:
+
+- `$[link:my-rule]`: Injects a link to the mix `my-rule` from the `./prompts/instructions` directory.
+- `$[link:my-rule text="Agent Rules"]`: Injects a link to the mix `my-rule` from the `./prompts/instructions` directory, with the link alias "Agent Rules".
+- `$[link:my-rule text="Agent Rules" text:cursor="Cursor Agent"]`: Using the `:tool-name` attribute, you can specify a tool-specific link text.
+
+Example:
+
+- Including a link in a mix:
+  - `Be sure to follow the $[link:agent-rules text="rules" text:cursor="Cursor Agent rules"]`
+- The link above will be rendered into tool-specific artifacts as:
+  - Roo Code: `Be sure to follow the [Cursor Agent rules](mdc:agent-rules.mdc).`
+  - Cursor: `Be sure to follow the [rules](agent-rules.mdc).`
+  - Note: Each artifact's link path would be relative to the tool's preferred rules directory, so you don't need to include the full path to the file.
+
+You can also use `mode="source"` to include a link to the source mix file in `./prompts/instructions`.
+
+Example:
+
+- `$[link:my-rule mode="source"]` → `[my-rule](../prompts/instructions/my-rule.mixd)`
+  - Note: The link path is relative to the artifact's location, so the link should work regardless of where the artifact is written.
+
 #### Data/Profile Includes
 
 Data/profile includes are a way to inject content from a YAML-formatted serialized data file such as a "profile" (personal, project, or org/company) into a mix.

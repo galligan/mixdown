@@ -40,6 +40,7 @@
 
 ## 🔵 Future Tasks
 
+- [ ] Consider reserving the `tools` namespace, since "tool" is a common term in the context of LLMs
 - [ ] Create a project plan for addressing security concerns
 - [ ] Add examples to documentation
 - [ ] Create website for interactive tutorial experience to use Mixdown

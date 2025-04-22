@@ -53,7 +53,7 @@ function identity(value) {
 
 <!-- This punch stays inside the main rule for every tool, 
      but renders as a 'command' file for Claude Code -->
-<punch name="code-quality"
+<insert name="code-quality"
        title="Code Quality Checks"
        type:claude-code="command">
 
@@ -62,11 +62,11 @@ function identity(value) {
 - Ensure new lines reach 100 % unit‑test coverage in Jest.  
 </instructions>
 
-</punch>
+</insert>
 
 <!-- This punch is *bounced* into its own file everywhere except Cursor,
      where it is skipped entirely -->
-<punch name="commit-guidelines"
+<insert name="commit-guidelines"
        bounce="windsurf,cline,roo,claude-code,openai-codex"
        skip="cursor"
        title="Commit Message Guidelines">
@@ -76,7 +76,7 @@ Follow Conventional Commits (`feat:`, `fix:`, `chore:`, etc.).
 Limit subject lines to 72 characters; wrap body at 100.  
 </instructions>
 
-</punch>
+</insert>
 
 </mix>
 

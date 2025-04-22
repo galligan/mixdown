@@ -1,0 +1,24 @@
+<mixdown version="0.1.0">
+
+<meta>
+name: agent-rules
+title: $[tool:name.display] Rules
+description: Rules for agentic development and workflows
+created: 2025-04-22T13:20:10
+modified: 2025-04-22T13:20:10
+alwaysApply: true
+</meta>
+
+<mix>
+
+<critical_instructions
+  heading="">
+- Before beginning any work, do the following:
+  - Read through the $[link:learnings text="learnings"] document
+- When recording a timestamp, use the command `date -u +"%Y-%m-%dT%H:%M:%S"`
+</critical_instructions>
+
+<>
+</mix>
+
+</mixdown>
