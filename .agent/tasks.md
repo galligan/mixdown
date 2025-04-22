@@ -39,7 +39,9 @@
 
 ## 🔵 Future Tasks
 
-- ...
+- [ ] Create a project plan for addressing security concerns
+- [ ] Add examples to documentation
+- [ ] Create website for interactive tutorial experience to use Mixdown
 
 ## 🟢 Completed Tasks
 
