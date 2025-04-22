@@ -1,21 +1,21 @@
-# 📄 Mixdown Product Requirements & Technical Specification (v0.1)
+# 📄 Mixdown Product Requirements & Technical Specification (v0.1)
 
-## 1.0 Purpose & Vision
+## 1.0 Purpose & Vision
 
-### 1.1 Problem
+### 1.1 Problem
 
-- **Instruction‑format fragmentation** across Cursor, Windsurf, Claude Code, etc.—leads to duplication and drift
+- **Instruction‑format fragmentation** across Cursor, Windsurf, Claude Code, etc.—leads to duplication and drift
 - Rising number of IDE/agent tools makes maintaining prompt rules exponentially harder for teams
 - Lack of a common, machine‑readable spec hinders automation, versioning, and testing
 
-### 1.2 Solution (Mixdown)
+### 1.2 Solution (Mixdown)
 
 - **Single "mix" source‑of‑truth** (`.mixd` file) → compiles into per‑tool artifacts
 - **Plugin architecture** so new tool providers can be added without touching core
 - **CLI + HTTP (MCP‑compliant) API** for both local and remote consumption
 - **Mixdown markup** (XML structure with Markdown content, YAML frontmatter) with placeholders/section tags → reliable prompt structure
 
-### 1.3 Goals (MVP)
+### 1.3 Goals (MVP)
 
 1. Compile a `.mixd` file into Cursor `.mdc` & Claude `CLAUDE.md` artifacts
 2. Provide an Ink‑based CLI (`mixdown build`, `mixdown init`, `mixdown validate`)
@@ -23,68 +23,68 @@
 4. Deliver schema validation & helpful error messages
 5. Ship as pnpm workspace with plugin packages
 
-### 1.4 Non‑Goals
+### 1.4 Non‑Goals
 
 - Web UI editor (out of scope for v0.1)
 - Cloud sync / account management
 
-## 2.0 Stakeholders & Users
+## 2.0 Stakeholders & Users
 
 - **Prompt Engineers / Dev‑Rel**: maintain canonical rules, distribute to teams
 - **Backend Devs**: call Mixdown API to fetch fresh rules before spawning agents
 - **Individual Developers**: run CLI locally for their IDEs
 - **Plugin Authors**: extend ecosystem with third‑party tool support
 
-## 3.0 Personas & User Stories
+## 3.0 Personas & User Stories
 
 | Persona | Story | Acceptance Criteria |
 |---------|-------|---------------------|
-| *Prompt Engineer Jane* | “As a PE, I want to update a single mix file and regenerate all IDE rules ¬so there is no drift.” | • `mixdown build` rewrites `.cursor/rules/*.mdc` & `CLAUDE.md` • Exit code 0 if successful |
-| *DevOps Amir* | “As DevOps, I want an API endpoint to fetch compiled artifacts in CI.” | • `POST /compile` returns ZIP • Response contains checksum |
-| *Plugin Author Lee* | “As a plugin author, I want to publish `@mixdown/plugin‑zed`.” | • Implements typed interface • Registrable via manifest |
+| *Prompt Engineer Jane* | "As a PE, I want to update a single mix file and regenerate all IDE rules ¬so there is no drift." | • `mixdown build` rewrites `.cursor/rules/*.mdc` & `CLAUDE.md` • Exit code 0 if successful |
+| *DevOps Amir* | "As DevOps, I want an API endpoint to fetch compiled artifacts in CI." | • `POST /compile` returns ZIP • Response contains checksum |
+| *Plugin Author Lee* | "As a plugin author, I want to publish `@mixdown/plugin‑zed`." | • Implements typed interface • Registrable via manifest |
 
-## 4.0 Functional Requirements
+## 4.0 Functional Requirements
 
-### FR‑1 Mix Parsing & Validation
+### FR‑1 Mix Parsing & Validation
 
 - MUST parse `.mixd` (XML structure with YAML front‑matter in `<meta>`) into AST
 - MUST detect unknown tags/attributes and produce helpful diagnostics
 
-### FR‑2 Plugin Execution
+### FR‑2 Plugin Execution
 
 - Core MUST load plugins dynamically via name or JS object
 - MUST support emitting multiple artifact files per mix (via segments using `export` or `only`)
 
-### FR‑3 CLI
+### FR‑3 CLI
 
 - Commands: `init`, `build`, `validate`, `preview`
 - Interactive (Ink) & non‑interactive (`--json` output) modes
 
-### FR‑4 HTTP API
+### FR‑4 HTTP API
 
 - RESTful Express server
 - Routes: `POST /compile`, `GET /healthz`, `GET /plugins`
 - Swagger/OpenAPI spec auto‑validated via `express‑openapi‑validator`
 
-### FR‑5 Configuration
+### FR‑5 Configuration
 
 - Global config file at `~/.config/mixdown/config.yaml` (or OS equivalent)
 - Project configuration in `.mixdown/config.yaml`
 
-### FR‑6 Starter Templates & Mixes
+### FR‑6 Starter Templates & Mixes
 
 - Provide starter **mixes** (e.g., `sample-core-coding-guidelines.mixd`)
 - Provide starter **templates** (e.g., `code-review.template.mixd`, `plan.template.mixd`)
 
-## 5.0 Non‑Functional Requirements
+## 5.0 Non‑Functional Requirements
 
-- **Performance**: compile < 250 ms for a 500‑line mix on M1 CPU
+- **Performance**: compile < 250 ms for a 500‑line mix on M1 CPU
 - **Extensibility**: adding plugin requires no core package change
 - **DX**: clear CLI errors; TypeScript typings for public API
 - **Security**: sandbox XML parser (no entity expansion), CORS restricted
-- **Testing**: ≥ 90 % line coverage in core compiler; contract tests for each plugin
+- **Testing**: ≥ 90 % line coverage in core compiler; contract tests for each plugin
 
-## 6.0 System Architecture
+## 6.0 System Architecture
 
 ```mermaid
 flowchart LR
@@ -97,7 +97,7 @@ flowchart LR
     F --> O[prompts/artifacts/builds/{id}]
 ```
 
-### 6.1 Component Breakdown
+### 6.1 Component Breakdown
 
 1. **Core Compiler (`@mixdown/core`)**
    - XML+YAML → AST (`fast‑xml‑parser`)
@@ -111,14 +111,14 @@ flowchart LR
    - Define target directory, file extensions, naming conventions
 4. **CLI (`@mixdown/cli`)**
    - Ink UI + commander fallback
-   - Shared yargs‐style parser for flags
+   - Shared yargs‑style parser for flags
 5. **API (`@mixdown/api`)**
    - Express + OpenAPI validator
    - Multer for file uploads (future)
 6. **MCP Adapter**
    - Conforms responses to Model Context Protocol v1
 
-### 6.2 Data Flow (CLI)
+### 6.2 Data Flow (CLI)
 
 ```sequence
 User->>CLI: mixdown build
@@ -131,7 +131,7 @@ Writer->>FS: mkdir/.writeFile
 CLI-->>User: Success + summary table
 ```
 
-### 6.3 Directory Structure (Monorepo)
+### 6.3 Directory Structure (Monorepo)
 
 ```text
 mixdown-monorepo/
@@ -150,18 +150,19 @@ mixdown-monorepo/
 ├── scripts/                   # release, lint‑staged, misc automation
 ├── tsconfig.base.json         # root TS compiler options
 │
-├── .mixdown/
-│   ├── scripts/               # 🛠️ Mixdown scripts
-│   ├── studio/                # 💾 author‑edited material
-│   │   ├── mixes/
-│   │   ├── profiles/
-│   │   ├── stems/
-│   │   ├── splices/
-│   │   ├── templates/
-│   │   └── config.yaml
-│   └── output/                # ⚙️ generated artifacts (git‑ignored)
-│       ├── runs/
-│       └── latest -> runs/<id>   # symlink
+├── prompts/                   # source directory for mixes
+│   ├── artifacts/             # generated artifacts
+│   │   ├── builds/            # build-specific artifacts
+│   │   └── latest/            # symlink to latest artifact set
+│   ├── instructions/          # mix files (.mixd)
+│   ├── includes/              # reusable content
+│   └── templates/             # template files
+│
+├── .mixdown/                  # mixdown configuration
+│   ├── cache/                 # cache directory 
+│   ├── reports/               # build reports
+│   ├── scripts/               # scripts directory
+│   └── config.yaml            # project configuration
 │
 ├── docs/                      # architecture diagrams, ADRs, OpenAPI html
 │
@@ -183,15 +184,15 @@ mixdown-monorepo/
         └── tests/
 ```
 
-## 7.0 Detailed Technical Specification
+## 7.0 Detailed Technical Specification
 
-### 7.1 Key TypeScript Interfaces
+### 7.1 Key TypeScript Interfaces
 
 ```ts
 // packages/core/src/plugin.ts
 export interface MixAST {
   meta: Meta;
-  tracks: Track[];
+  segments: Segment[];
   nodes: Node[]; // raw xml nodes
 }
 
@@ -203,54 +204,61 @@ export interface MixdownPlugin {
 }
 ```
 
-### 7.2 Placeholder Engine
+### 7.2 Placeholder Engine
 
 - Uses regex `/\[(?<key>[\w-]+)(?:\s+format="(?<fmt>[^"]+)")?\]/g`
 - Built‑in handlers: `date`, `time`, `title`, `git_branch`, `package_version`
 - Plugins may register custom placeholder resolvers
 
-### 7.3 Error Handling
+### 7.3 Error Handling
 
 | Code | Condition | Example Message |
 |------|-----------|-----------------|
-| `MX001` | Unknown tag | "Tag `<foo>` is not supported (line 12)" |
+| `MX001` | Unknown tag | "Tag `<foo>` is not supported (line 12)" |
 | `MX010` | Plugin render fail | "cursor: Cannot write file; path undefined" |
 
-### 7.4 Config Resolution
+### 7.4 Config Resolution
 
 1. CLI flags
 2. Project `.mixdown/config.yaml`
-3. User `~/.config/mixdown.yaml`
+3. User `~/.config/mixdown/config.yaml`
 4. Hard‑coded defaults
 
-### 7.5 Testing Strategy
+### 7.5 Testing Strategy
 
 - **Unit**: core compiler functions (parsing, resolving includes/placeholders, segment handling).
 - **Contract**: each plugin provider loaded with sample mixes → snapshot generated artifacts.
 - **E2E**: Supertest hits API `/compile`, verifies ZIP artifact contents.
 
-### 7.6 CI/CD
+### 7.6 CI/CD
 
-- GitHub Actions matrix: Node 18 | 20; macOS + ubuntu
+- GitHub Actions matrix: Node 18 | 20; macOS + ubuntu
 - `pnpm -r test && pnpm -r build`
 - Changesets for independent package version bumps
 
-## 8.0 Milestones & Timeline
+## 8.0 Milestones & Timeline
 
-| Phase | Dates | Deliverables |
-|-------|-------|--------------|
-| *MVP α* | Apr 28 – May 15 | Core compiler, Cursor & Claude plugin providers, build/validate CLI |
-| *API β* | May 16 – May 31 | Express API, Dockerfile, OpenAPI docs |
-| *Plugin Ecosystem* | June | Windsurf, Roo, Cline providers; provider author guide |
-| *v1 GA* | July | Perf hardening, security audit, >90 % coverage, website docs |
+| Phase | Deliverables |
+|-------|--------------|
+| *MVP* | Core compiler, Cursor & Claude plugin providers, build/validate CLI |
+| *0.2* | Windsurf, Roo Code, Cline providers; provider author guide |
+| *0.3* | Express API, Dockerfile, OpenAPI docs |
+| *0.4* | Perf hardening, security audit, >90 % coverage, website docs |
 
-## 9.0 Open Questions / Risks
+## 9.0 Open Questions / Risks
 
 - How to version mix files when plugins introduce breaking template syntax?
 - Need sandbox for resolving placeholders that execute shell commands (security)
-- Large mix files (10 k+ lines) performance—may need streaming compiler
+- Large mix files (10 k+ lines) performance—may need streaming compiler
 
-## 10.0 Appendix
+## 10.0 Appendix
 
-- **Glossary**: mix, track, bounce, patch, plugin, MCP
-- **References**: GPT‑4.1 prompting guide, Cursor Rules docs, Claude Code docs
+- **Glossary**: 
+  - **Mix**: The template used to generate artifact files, with `.mixd` extension
+  - **Segment**: A portion of a mix that can be embedded within or extracted as a separate artifact
+  - **Artifact**: The file(s) created from a mix for a specific tool (e.g., Cursor .mdc files)
+  - **Include**: Content injected into a mix from external files or segments
+  - **Placeholder**: Token for LLM to replace with a value (e.g., `[date]`)
+  - **Plugin**: Extension that supports specific tools like Cursor or Claude Code
+  - **MCP**: Model Context Protocol standard for AI tooling
+- **References**: GPT‑4.1 prompting guide, Cursor Rules docs, Claude Code docs
