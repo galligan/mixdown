@@ -35,6 +35,12 @@
 
 ## 🟡 In Progress Tasks
 
+- [ ] Task: Rewrite README and docs for simplified Mixdown syntax ([ref](README.md))
+  - [ ] Subtask: Rewrite README.md to slim down (completed TODO)
+  - [ ] Subtask: Create notes/README-changes.md summarizing major removals/migrations
+  - [ ] Subtask: Populate docs/reference/mixdown-syntax.md
+  - [ ] Subtask: Populate docs/guides/making-mixes.md
+  - [ ] Subtask: Populate docs/guides/mixdown-configuration.md
 - [ ] Task: Update notes/updates-to-mvp.md with terminology change clarification ([ref](notes/updates-to-mvp.md))
 - [ ] [Project: Mixdown MVP Task Plan](./.agent/plans/mixdown-mvp-tasks.md)
 

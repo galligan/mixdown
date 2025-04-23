@@ -1,5 +1,8 @@
 # Mixdown CLI
 
+> [!NOTE]
+> This guide is a work in progress.
+
 ## Usage
 
 Mixdown provides a command-line interface for initializing projects, managing configuration, compiling mixes into artifacts, and validating source files
