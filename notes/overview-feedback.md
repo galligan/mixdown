@@ -64,11 +64,13 @@ These either surfaced in earlier design notes or emerge from the latest brace sy
     - possible-fix: Per-file front-matter settings override project `.mixdown/config.yaml` (see heading_level override example).
 - [ ] 15. **Brace collision with static placeholders**
     - Lint rule for `{word}` without sigil/section.
+    - possible-fix: Add linter rule that requires sigils for dynamic placeholders (`{@...}`, `{=...}`, `{>...}`). Any braces without sigils should trigger a warning to either add a sigil or escape with `\{` for literal output.
 - [ ] 16. **Multi-line section openers**
     - Allowed? Parsing & formatter rules.
     - possible-fix: Multi-line opening braces are valid; example provided under "Multi-line section tags". Parser preserves formatting.
 - [ ] 17. **Inner placeholder recursion order**
     - Depth-first? Max depth?
+    - possible-fix: Implement depth-first traversal for nested placeholders with a maximum recursion depth of 5 levels. Document this behavior and add a linter warning when approaching the limit.
 - [ ] 18. **Fenced-code opt-in**
     - Always parse placeholders or require `{mixdown parse}` flag?
     - possible-fix: Default is to parse even inside code; author can escape with `\` prefix. Flag not required—document this behaviour.
@@ -80,8 +82,10 @@ These either surfaced in earlier design notes or emerge from the latest brace sy
     - possible-fix: Use `as="alternate-name"` attribute on embed section to disambiguate duplicates.
 - [ ] 21. **Target-vs-group naming collision**
     - Resolution rule if someone registers `cli` as a target ID.
+    - possible-fix: Target IDs take precedence over group names in case of collision. When a plugin registers a target with the same name as an existing group, the target ID is honored in scoped attributes like `@cli`, and group references must use explicit group syntax like `@group:cli`. Document this in plugin development guide.
 - [ ] 22. **Version mismatch policy**
     - Behaviour when file `mixdown.version` > CLI version.
+    - possible-fix: CLI should warn when processing files with newer version requirements but attempt to build anyway. If it encounters unknown syntax, it will fail with clear error messages listing the required Mixdown version. Add upgrade instructions in error output.
 
 ## 3. Minor Copy / Consistency Tweaks
 
