@@ -147,7 +147,7 @@ Supported keys are:
 #### Standard Keys
 
 - `name`: The name of the mix.
-  - Names are formatted as `kebab-case`, meaning all lowercase with hyphens to separate words.
+    - Names are formatted as `kebab-case`, meaning all lowercase with hyphens to separate words.
 - `description`: A description of the mix.
 
 #### Meta Keys
@@ -163,13 +163,13 @@ Optional keys aren't required for Mixdown to work, but will be included in any t
 - `include` (optional): A list of tools that Mixdown should create artifacts for.
 - `exclude` (optional): A list of tools that Mixdown should not create artifacts for.
 - `type=[rule,command,mode,template]` (optional): The type of artifact you'd like the mix to be written as.
-  - `type="rule"` (default): The mix will be written as a rule (e.g. for Cursor Rules).
-  - `type="command"`: The mix will be written as a command (e.g. for Claude Code).
-  - `type="mode"`: Modes are supported by some tools, which allow for agents to have entirely different sets of instructions e.g. "Architect," "Writer," "Coder," etc.
-  - `type="template"`: Templates define a specific format for an LLM to use to generate content. They are typically paired with rules or instructions to contextualize the desired output for the LLM.
+    - `type="rule"` (default): The mix will be written as a rule (e.g. for Cursor Rules).
+    - `type="command"`: The mix will be written as a command (e.g. for Claude Code).
+    - `type="mode"`: Modes are supported by some tools, which allow for agents to have entirely different sets of instructions e.g. "Architect," "Writer," "Coder," etc.
+    - `type="template"`: Templates define a specific format for an LLM to use to generate content. They are typically paired with rules or instructions to contextualize the desired output for the LLM.
 - `globs`: A list of globs to include in the mix. e.g. `globs: **/*.md`
-  - Mixdown's globs implementation supports more complex patterns than what individual tools may support e.g. `**/*.{md,mdc,txt}`.
-    - In these cases, Mixdown will parse the globs, and apply the appropriate tool-specific globs format when writing the files.
+    - Mixdown's globs implementation supports more complex patterns than what individual tools may support e.g. `**/*.{md,mdc,txt}`.
+        - In these cases, Mixdown will parse the globs, and apply the appropriate tool-specific globs format when writing the files.
 - `alwaysApply`: Whether the mix should always be applied.
 
 #### Tool Overrides
@@ -177,9 +177,9 @@ Optional keys aren't required for Mixdown to work, but will be included in any t
 Tool overrides define specific settings for the tool in question. With these, you can provide tool-specific overrides to the mix's default settings.
 
 - `cursor`: Cursor-specific keys, which will be included in Cursor Rules `.mdc` files Mixdown writes.
-  - `description`: Cursor-specific description
-  - `globs`: Cursor-specific globs
-  - `alwaysApply`: Whether the mix should always be applied.
+    - `description`: Cursor-specific description
+    - `globs`: Cursor-specific globs
+    - `alwaysApply`: Whether the mix should always be applied.
 
 Example:
 
@@ -228,7 +228,7 @@ There are some common XML tags that we use in Mixdown:
 - `<system>`: A system prompt
 - `<instructions>`: A set of instructions for the AI to follow
 - `<example>`: An example response to guide the AI's response output
-  - `<good_example>` and `<bad_example>` can be used to illustrate examples of good (correct) and bad (incorrect) responses, respectively.
+    - `<good_example>` and `<bad_example>` can be used to illustrate examples of good (correct) and bad (incorrect) responses, respectively.
 - `<formatting>`: Formatting instructions
 - Chain of thought prompting can be done by using `<thinking>` and `<answer>` tags.
 
@@ -271,13 +271,13 @@ When including a segment in a mix, you'll need to give it a name, and use one or
 #### Segment Attributes
 
 - `name` (required): The name of the segment. This will be used to name the file that is created when the mix is split. The files will be written to their respective tool's `prompts/artifacts` directory with its preferred file extension.
-  - Example: `<segment name="code-quality">` would create `.cursor/rules/code-quality.mdc` for Cursor, and `.roo/rules/code-quality.md` for Roo Code.
-  - `name[:tool-name]`: You can use a `:` as a namespace to specify tool-specific alternative names for written files. You can specify one or more tools by using a colon, followed by the tool's name e.g. `name:cursor="code-quality-rules" name:claude-code="code-quality"`.
+    - Example: `<segment name="code-quality">` would create `.cursor/rules/code-quality.mdc` for Cursor, and `.roo/rules/code-quality.md` for Roo Code.
+    - `name[:tool-name]`: You can use a `:` as a namespace to specify tool-specific alternative names for written files. You can specify one or more tools by using a colon, followed by the tool's name e.g. `name:cursor="code-quality-rules" name:claude-code="code-quality"`.
 - `title[:tool-name]`: The title of the segment. This will be used as a title at the top of the segment artifact, likely as a `# H1 Heading`. By default the title will output with the first letter of the title capitalized. Otherwise, formatting will be preserved.
 - `skip="[tool-name-1,tool-name-2]"`: This attribute indicates that a segment should not get written to a tool's instructions. It's populated with a comma-separated list of tool names.
-  - Example: `skip="cursor"` would mean that when writing the mix to Cursor Rules, this particular segment would not be included.
+    - Example: `skip="cursor"` would mean that when writing the mix to Cursor Rules, this particular segment would not be included.
 - `export="[tool-name-1,tool-name-2]"`: Exporting a segment means that the segment will not be included in the specific mix's artifact, and will be written instead as separate artifacts. This is handy when you want to write instructions in a comprehensive way, but ultimately want to have separate files for each tool to work with.
-  - You can also include specific tools to export the segment for: `<segment name="my-rule" export="cursor,roo">`. This will create a file called `my-rule.[md,mdc]` in the each tool's respective directories, but only for Cursor and Roo Code.
+    - You can also include specific tools to export the segment for: `<segment name="my-rule" export="cursor,roo">`. This will create a file called `my-rule.[md,mdc]` in the each tool's respective directories, but only for Cursor and Roo Code.
 - `only`: Only is a shortcut for `export` that will create a separate segment file called `my-rule.[md,mdc]` in all target directories, and skip the segment's content from being included in the artifacts.
 - `type[:tool-name]`: This attributes allows you to specify the "type" of artifact you'd like the segment to be written as (e.g. `rule`, `command`, `mode`, `template`). You can specify one or more tools by using a colon, followed by the tool's name e.g. `type:cursor="rule" type:claude-code="command"`.
 
@@ -332,7 +332,7 @@ alwaysApply:
 An "include" is used to inject content into a mix, from either the `./prompts/includes` directory, an existing mix file, or from a segment contained within the same mix. This adds a significant amount of flexibility to your mixes, allowing for more dynamic and reusable prompts. Here's how they're formatted:
 
 - `$[include:name]`: Injects the content of the include file named `name.mixd` from the `./prompts/includes` directory or from an include contained within the same mix. This can be handy to re-use content from elsewhere in the same mix, such as important instructions that may be useful in the top or bottom of a mix.
-  - Note: If an include's name within a mix is the same as one in the `prompts/includes` directory, the include within the mix will take precedence.
+    - Note: If an include's name within a mix is the same as one in the `prompts/includes` directory, the include within the mix will take precedence.
 - `$[include:mix:name]`: Injects the content of the mix file named `name.mixd` from the `./prompts/instructions` directory. When you do this, the mix content is included inline without consideration of the mix's `<meta>` section, `<override>` tags, or any other mix-specific content.
 - `$[include:template:name]`: Injects the content of a template named `name` from the `./prompts/templates` directory.
 - `$[include:path="path/to/file.md"]`: Injects the content of the file at `path/to/file.md` inline into the mix. We use the full `include` keyword ensure Mixdown handles it correctly. 🚧 Any included content will be sanitized to avoid potential security concerns.
@@ -362,26 +362,26 @@ Linking from one rule file to another can get tricky when you're working across 
 Example:
 
 - Including a link in a mix:
-  - `Be sure to follow the $[link:agent-rules text="rules" text:cursor="Cursor Agent rules"]`
+    - `Be sure to follow the $[link:agent-rules text="rules" text:cursor="Cursor Agent rules"]`
 - The link above will be rendered into tool-specific artifacts as:
-  - Roo Code: `Be sure to follow the [Cursor Agent rules](mdc:agent-rules.mdc).`
-  - Cursor: `Be sure to follow the [rules](agent-rules.mdc).`
-  - Note: Each artifact's link path would be relative to the tool's preferred rules directory, so you don't need to include the full path to the file.
+    - Roo Code: `Be sure to follow the [Cursor Agent rules](mdc:agent-rules.mdc).`
+    - Cursor: `Be sure to follow the [rules](agent-rules.mdc).`
+    - Note: Each artifact's link path would be relative to the tool's preferred rules directory, so you don't need to include the full path to the file.
 
 You can also use `mode="source"` to include a link to the source mix file in `./prompts/instructions`.
 
 Example:
 
 - `$[link:my-rule mode="source"]` → `[my-rule](../prompts/instructions/my-rule.mixd)`
-  - Note: The link path is relative to the artifact's location, so the link should work regardless of where the artifact is written.
+    - Note: The link path is relative to the artifact's location, so the link should work regardless of where the artifact is written.
 
 #### Data/Profile Includes
 
 Data/profile includes are a way to inject content from a YAML-formatted serialized data file such as a "profile" (personal, project, or org/company) into a mix.
 
 - `data` and `profile` are interchangeable, but both are supported to help organize your includes.
-  - When using `$[data:foo]`, Mixdown will look for `./prompts/includes/foo.data.yaml`
-  - When using `$[profile:bar]`, Mixdown will look for `./prompts/includes/bar.profile.yaml`
+    - When using `$[data:foo]`, Mixdown will look for `./prompts/includes/foo.data.yaml`
+    - When using `$[profile:bar]`, Mixdown will look for `./prompts/includes/bar.profile.yaml`
 
 Examples:
 
