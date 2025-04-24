@@ -2,6 +2,50 @@
 
 > *One prompt. Every tool. Zero drift.*
 
+## Table of Contents
+
+- [Table of Contents](#table-of-contents)
+- [1. Purpose \& Vision](#1-purpose--vision)
+  - [1.1 Elevator Pitch](#11-elevator-pitch)
+  - [1.2 Problem Statement](#12-problem-statement)
+  - [1.3 Solution Overview](#13-solution-overview)
+- [2. Core Concepts](#2-core-concepts)
+- [3. Key Features](#3-key-features)
+- [4. Supported Targets (MVP)](#4-supported-targets-mvp)
+- [5. Getting Started](#5-getting-started)
+  - [5.1 Installation](#51-installation)
+  - [5.2 Quick Start](#52-quick-start)
+- [6. Syntax Cheatsheet](#6-syntax-cheatsheet)
+- [7. Full Syntax Reference (Specification)](#7-full-syntax-reference-specification)
+  - [7.1 Design Goals](#71-design-goals)
+  - [7.2 Section Delimiters](#72-section-delimiters)
+  - [7.3 Section Attributes](#73-section-attributes)
+  - [7.4 Front-Matter](#74-front-matter)
+  - [7.5 Placeholders](#75-placeholders)
+  - [7.6 Mixins](#76-mixins)
+- [8. Code Examples (Practical Snippets)](#8-code-examples-practical-snippets)
+  - [8.1 Auto-Closing vs. Explicit Nesting](#81-auto-closing-vs-explicit-nesting)
+  - [8.2 Target-Filter Shortcuts](#82-target-filter-shortcuts)
+  - [8.3 Rich Section Attributes](#83-rich-section-attributes)
+  - [8.4 Placeholder Types in Action](#84-placeholder-types-in-action)
+  - [8.5 Mixin Include with Section Filtering](#85-mixin-include-with-section-filtering)
+  - [8.6 Front-Matter Migration Cheat-Sheet](#86-front-matter-migration-cheat-sheet)
+- [9. Directory Structure (Monorepo)](#9-directory-structure-monorepo)
+  - [9.1 Documentation](#91-documentation)
+- [10. System Architecture](#10-system-architecture)
+  - [9.1 Component Highlights](#91-component-highlights)
+- [11. Security, Testing \& Performance](#11-security-testing--performance)
+- [12. Roadmap (High Level)](#12-roadmap-high-level)
+- [13. Contributing \& Community](#13-contributing--community)
+- [14. References](#14-references)
+- [15. Appendix](#15-appendix)
+  - [15.1 Comprehensive Attribute Reference Table](#151-comprehensive-attribute-reference-table)
+  - [15.2 Legacy Format Migration](#152-legacy-format-migration)
+    - [Why This Change?](#why-this-change)
+    - [At-a-Glance Changes](#at-a-glance-changes)
+    - [Front-Matter Migration Cheat-Sheet](#front-matter-migration-cheat-sheet)
+
+
 ## 1. Purpose & Vision
 
 ### 1.1 Elevator Pitch
@@ -350,6 +394,50 @@ mixdown/
 │   ├── plugin-cursor/     # first-party provider
 │   └── plugin-claude-code/| first-party provider
 └── docs/                  # deep dives & spec
+```
+
+### 9.1 Documentation
+
+```text
+mixdown/
+├── advanced-usage.md                     # advanced usage
+├── cli.md                                # CLI reference
+├── config.md                             # Mixdown configuration
+├── glossary.md                           # Mixdown glossary of terms
+├── includes.md                           # includes reference
+├── mixes.md                              # mixes reference
+├── mixins.md                             # mixins reference
+├── quick-reference.md                    # quick reference guide
+├── roadmap.md                            # Mixdown project roadmap
+├── templates.md                          # templates reference
+├── docs/                                 # project documentation
+│   ├── architecture/                     # system architecture
+│   │   ├── data-flow.md                  # data flow diagram
+│   │   ├── design-decisions.md           # design decisions
+│   │   └── architecture-overview.md      # architecture overview
+│   ├── contributing/                     # contributing guidelines
+│   │   ├── CHANGESETS.md                 # changelog
+│   │   ├── CONTRIBUTING.md               # contributing guidelines
+│   │   └── DEVELOPMENT.md                # development guidelines
+│   ├── developer/                        # developer documentation
+│   │   ├── plugin-development.md         # plugin provider development
+│   │   └── provider-manifest.md          # provider manifest schema
+│   ├── project/                          # project documentation
+│   │   └── prd.md                        # project requirements document
+│   └── spec/                             # detailed technical specifications
+│       ├── attributes-spec.md            # attributes specification
+│       ├── config-schema.md              # configuration schema
+│       ├── includes-spec.md              # includes specification
+│       ├── linting-spec.md               # linting rules specification
+│       ├── mix-spec.md                   # mix specification
+│       ├── mixdown-syntax.md             # syntax reference
+│       ├── mixin-spec.md                 # mixin specification
+│       ├── placeholders-spec.md          # placeholders specification
+│       ├── plugin-spec.md                # plugin specification
+│       ├── sections-spec.md              # sections specification
+│       ├── template-spec.md              # template specification
+│       └── advanced-usage.md             # advanced usage documentation
+└── README.md                             # deep dives & spec
 ```
 
 ## 10. System Architecture
