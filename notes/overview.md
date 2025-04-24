@@ -98,19 +98,7 @@ Full spec lives in `docs/spec.md`.
 
 ## 7. Full Syntax Reference (Specification)
 
-> This section mirrors the **entire** `simplifying-mixdown-syntax.md` document so you can treat this overview as a *single-stop reference*. If you need the rationale or examples, they are embedded below verbatim (lightly edited for brevity).
-
-### 7.1 Why This Change?
-
-The original Mixdown syntax mixed custom XML with Markdown, which:
-
-- Violated markdown-lint rules and rendered poorly in tooling.
-- Introduced a steep learning curve for newcomers.
-- Complicated provider parsing and plugin development.
-
-The new **CommonMark-only** approach uses braces (`{{section}}`) so every file is valid Markdown, previewable anywhere, and trivially linted.
-
-### 7.2 Design Goals
+### 7.1 Design Goals
 
 | Goal | Description |
 |------|-------------|
@@ -119,19 +107,7 @@ The new **CommonMark-only** approach uses braces (`{{section}}`) so every file i
 | **Previewability** | Render legibly in GitHub, VS Code, Obsidian, etc. |
 | **Extensibility** | Advanced behaviors declared via attributes instead of new syntax. |
 
-### 7.3 At-a-Glance Changes
-
-| Old Concept | New Concept | Rationale |
-|-------------|-------------|-----------|
-| `<section>` XML tags | `{{section}}` braces | Keeps Markdown valid & removes mixed markup. |
-| `<meta>` block | Standard YAML front-matter | Aligns with ecosystem norms (Jekyll, MDX). |
-| `$[link:example]`, `$[alias:name]` | `{>file}`, `{@name}` | Unified placeholder syntax. |
-| `$[include]` / `mix` / `template` | `{{$include}}` mixins | Single mental model for includes. |
-| `tool=` attr | `target=` attr | Clarifies these refer to build targets. |
-
-### 7.4 Syntax Reference
-
-#### 7.4.1 Section Delimiters
+### 7.2 Section Delimiters
 
 ```md
 {{instructions title="Rules" export="cli"}}
@@ -139,11 +115,15 @@ Please follow these coding standards…
 {{/instructions}}
 ```
 
-- **Open** `{{name …}}`  
-- **Close** `{{/name}}` (optional if another section starts)  
-- **Self-close** `{{name … /}}`
+- **Section Tags Syntax**:
+    - **Open** `{{name …}}`  
+    - **Close** `{{/name}}` (optional if another section starts)  
+    - **Self-close** `{{name … /}}` (Attributes must precede the `/`)
+- **Section Tag Naming**:
+    - `snake_case` is recommended for section names.
+    - `kebab-case` and `spaced out` are also supported but will be normalized to `snake_case` in rendered output.
 
-**Multi-line Tags** are allowed for readability:
+**Multi-line Tags** are allowed for readability, and the parser preserves this formatting:
 
 ```md
 {{instructions
@@ -152,7 +132,7 @@ Please follow these coding standards…
 }}
 ```
 
-#### 7.4.2 Section Attributes
+### 7.3 Section Attributes
 
 | Attribute | Type | Purpose |
 |-----------|------|---------|
@@ -169,7 +149,7 @@ Please follow these coding standards…
 
 > **Target-specific overrides**: append `@target` / `@group` (e.g. `title@cursor="Cursor Rules"`). Precedence: explicit target → target group → default.
 
-#### 7.4.3 Front-Matter
+### 7.4 Front-Matter
 
 ```yaml
 ---
@@ -181,7 +161,7 @@ labels: ["core", "security"]
 ---
 ```
 
-Provider plugins may declare `required_keys` / `allowed_keys`. Missing `required_keys` raises build errors.
+Provider plugins declare allowed and required front-matter keys within their manifests using the `types.<artifact>.allowed_keys` and `types.<artifact>.required_keys` arrays respectively (see example in Section 7.9). Missing `required_keys` will raise build errors, ensuring necessary metadata is present for each artifact type. In some cases, such as `globs`, the target may require a key to be present, but a value is not required.
 
 *Target-specific overrides*:
 
@@ -193,21 +173,21 @@ cursor:
 ---
 ```
 
-#### 7.4.4 Placeholders
+### 7.5 Placeholders
 
-| Type | Syntax | Old Syntax | Notes |
-|------|--------|-----------|-------|
-| **Static (AI note)** | `[ fill this in ]` | unchanged | – |
-| **Alias** | `{@name}` | `$[alias:name]` | Alias lookup chain: front-matter → project → global. |
-| **Data** | `{=user.name}` | `$[profile:user.name]` | Injects YAML data from `prompts/data/user.yaml`. |
-| **Internal Link** | `{>file#section\|Alias}` | `$[link:file]` | Path auto-resolved per target. |
+| Type | Syntax | Notes |
+|------|--------|-------|
+| **Static (AI note)** | `[ fill this in ]` | Human or AI-fillable placeholder |
+| **Alias** | `{@name}` | Alias lookup chain: front-matter → project → global. |
+| **Data** | `{=user.name}` | Injects YAML data from `prompts/data/user.yaml`. |
+| **Internal Link** | `{>file#section\|Alias}` | Path auto-resolved per target. |
 
 **Built-in Alias Placeholders**:
 
 - `{@target}` → current target ID  
 - `{@target.name}` → display name from the provider manifest
 
-#### 7.4.5 Mixins
+### 7.6 Mixins
 
 ```md
 {{$include:legal no-title}}
@@ -218,104 +198,12 @@ Additional attributes:
 
 | Attribute | Purpose |
 |-----------|---------|
-| `as` | Rename mixin on render. |
+| `as="alternate-name"` | Rename mixin on render; helps disambiguate duplicate mixins when the same mixin is included multiple times in a document. |
 | `no-title` | Suppress top heading of source. |
 | `no-mixins` | Strip nested mixins inside source. |
 | `include-frontmatter` | Bring source front-matter into caller. |
-| `alias-from` | Choose alias resolution scope (`source` or `current`). |
-| `sections` | Filter specific sections (`sec1,!sec2`). |
-
-### 7.5 Heading Levels
-
-Global defaults in `.mixdown/config.yaml`:
-
-```yaml
-mixdown:
-  headings:
-    default: 2          # <h2>
-    reserve_h1: true
-    strict: true
-    case: title         # title, sentence, lower, upper
-    break_after: true
-    range: {min: 2, max: 6}
-```
-
-Override per file:
-
-```yaml
----
-heading_level:
-  reserve_h1: false
-  strict: false
-  range: {min: 1, max: 6}
----
-```
-
-**Attribute Modifiers**:
-
-- `title?h2="Rules"` → `## Rules`  
-- `title?h+="Next"`  → increment heading level  
-- `title?replace="New Title"` → Replace first heading inside section.
-
-### 7.6 Target Groups
-
-| Group | Members | Description |
-|-------|---------|-------------|
-| `ide` | cursor, windsurf, zed | Graphical editors. |
-| `vs-code-fork` | cursor, windsurf | VS Code forks. |
-| `vs-code-extension` | roo-code, cline | VS Code extensions. |
-| `cli` | aider, claude-code | Terminal tools. |
-| `desktop` | cursor, vs-code | Native apps. |
-| `all` | *(wildcard)* | Every registered target. |
-
-**Provider-defined groups** live in each plugin's manifest and can be overridden in project config:
-
-```yaml
-# .mixdown/config.yaml
-target-groups:
-  core:
-    include: ["cursor", "roo-code"]
-  ide:
-    include: ["zed", "cursor"]
-    exclude: ["windsurf"]
-  cli:
-    append: ["new-terminal-tool"]
-```
-
-Group expansion order: provider groups → project overrides → nested resolution → exclusions.
-
-### 7.7 Advanced Usage & Attribute Parsing
-
-- **Flags** are boolean attributes (`no-xml`) and default to `true`.
-- **Scoped attributes** use `@target` suffix (`title@cli="CLI Rules"`). Precedence: target → group → default.
-- **Key-value pairs** support unquoted values without spaces, or quoted for strings containing spaces.
-- **Placeholder Resolution in Code Blocks** – still processed unless escaped (`\{@alias}`).
-- Upcoming conditional content: `%if target in cli % … %endif%` (future proposal).
-
-### 7.8 Ambiguities & Open Questions
-
-1. **Heading Algorithm** – How to clamp `h-1` at `<h6>` when files start with `{{section}}`?
-2. **Group Merge Semantics** – Replacement vs. mutation for `include/exclude`? Currently *replacement*.
-3. **Provider Manifest Schema** – Need finalized JSON schema with `versionCompat`, etc.
-4. **Case Sensitivity** – Enforce lower-kebab for IDs or auto-convert?
-5. **Heading Strictness Precedence** – Project config vs. per-file overrides.
-
-### 7.9 Future Plans – Plugin Target Versioning
-
-Plugins will declare compatibility to avoid breakage:
-
-```json
-{
-  "id": "cursor",
-  "version": "1.0.0",
-  "versionCompat": {
-    "mixdown": "^2.0.0",
-    "targets": { "roo-code": ">=0.8.0 <2.0.0" }
-  }
-}
-```
-
-Build-time checks will warn on incompatibilities, offer feature negotiation, and allow graceful degradation.
+| `alias-from="source"` | Choose alias resolution scope (`source` or `current`). |
+| `sections="sec1,!sec2"` | Filter specific sections (`sec1,!sec2`). |
 
 ## 8. Code Examples (Practical Snippets)
 
@@ -523,5 +411,81 @@ See [`docs/contributing.md`](docs/contributing.md) for full guidelines.
 - `docs/provider-development.md` – Build a new plugin provider.
 - `simplifying-mixdown-syntax.md` – Design rationale & deep-dive.
 - `README.md` – Project README (public landing).
+
+## 15. Appendix
+
+### 15.1 Comprehensive Attribute Reference Table
+
+The following table provides a complete list of all supported attributes in Mixdown, their types, default values, and scope support:
+
+| Attribute | Type | Default | Section | Mixin | Front-matter | Description |
+|-----------|------|---------|---------|-------|--------------|-------------|
+| `id` | string | none | ✅ | ❌ | ❌ | Unique reference for sections |
+| `title` | string | none | ✅ | ❌ | ❌ | Inject heading above section |
+| `description` | string | none | ✅ | ❌ | ✅ | Short description of content |
+| `filter` | list | none | ✅ | ❌ | ❌ | Include/exclude targets |
+| `export` | list | none | ✅ | ❌ | ❌ | Export as separate artifact |
+| `format` | enum | none | ✅ | ❌ | ❌ | Force specific content format |
+| `no-xml` | flag | true | ✅ | ❌ | ❌ | Skip XML wrapping |
+| `include-attributes` | list | none | ✅ | ❌ | ❌ | Whitelist attributes in rendered XML |
+| `remove-first-heading` | flag | true | ✅ | ❌ | ❌ | Strip first intra-section heading |
+| `as` | string | none | ❌ | ✅ | ❌ | Rename mixin on render to disambiguate duplicate mixins in the same document. |
+| `no-title` | flag | true | ❌ | ✅ | ❌ | Suppress top heading of source |
+| `no-mixins` | flag | true | ❌ | ✅ | ❌ | Strip nested mixins in source |
+| `include-frontmatter` | flag | false | ❌ | ✅ | ❌ | Bring source front-matter into caller |
+| `alias-from` | enum | "current" | ❌ | ✅ | ❌ | Alias resolution scope |
+| `sections` | list | none | ❌ | ✅ | ❌ | Filter specific sections |
+| `name` | string | none | ❌ | ❌ | ✅ | Mix identifier (required) |
+| `version` | string | none | ❌ | ❌ | ✅ | Mix version (required) |
+| `labels` | array | `[]` | ❌ | ❌ | ✅ | Categorization tags |
+| `targets` | array | `[]` | ❌ | ❌ | ✅ | Filter applicable targets |
+| `heading_level` | object | config | ❌ | ❌ | ✅ | Override heading settings |
+
+**Notes:**
+- All attributes with string values can be scoped with target/group suffixes (e.g., `title@cursor="Cursor-specific title"`)
+- Flag attributes default to `true` when specified without a value
+- Target-specific front-matter keys override global values (e.g., `cursor: { description: "..." }`)
+
+### 15.2 Legacy Format Migration
+
+#### Why This Change?
+
+The original Mixdown syntax mixed custom XML with Markdown, which:
+
+- Violated markdown-lint rules and rendered poorly in tooling.
+- Introduced a steep learning curve for newcomers.
+- Complicated provider parsing and plugin development.
+
+The new **CommonMark-only** approach uses braces (`{{section}}`) so every file is valid Markdown, previewable anywhere, and trivially linted.
+
+#### At-a-Glance Changes
+
+| Old Concept | New Concept | Rationale |
+|-------------|-------------|-----------|
+| `<section>` XML tags | `{{section}}` braces | Keeps Markdown valid & removes mixed markup. |
+| `<meta>` block | Standard YAML front-matter | Aligns with ecosystem norms (Jekyll, MDX). |
+| `$[link:example]`, `$[alias:name]` | `{>file}`, `{@name}` | Unified placeholder syntax. |
+| `$[include]` / `mix` / `template` | `{{$include}}` mixins | Single mental model for includes. |
+| `tool=` attr | `target=` attr | Clarifies these refer to build targets. |
+
+#### Front-Matter Migration Cheat-Sheet
+
+Old XML flavour ➜ new YAML flavour:
+```xml
+<mixdown version="0.1.0">
+<meta>
+name: legacy-rule
+</meta>
+<mix>…</mix>
+</mixdown>
+```
+becomes
+```yaml
+---
+mixdown:
+  version: 0.1.0
+name: legacy-rule
+---
+```
 
 *© 2024 Mixdown contributors – MIT License.*
