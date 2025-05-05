@@ -1,5 +1,6 @@
 # 📐 Mixdown Overview – Formatting Improvement Suggestions
 
+> [!NOTE]
 > These recommendations focus on **clarity, explicitness for AI agents, and future‑proof maintainability**. Treat them as an incremental punch‑list rather than a full rewrite.
 
 ## Table of Contents
@@ -18,37 +19,37 @@
 
 1. **Add Table of Contents**
    - [x] Insert Table of Contents after H1
-   - [x] Configure markdown‑lint rule to validate TOC presence
+   - [ ] Configure markdown‑lint rule to validate TOC presence
 2. **Refactor Purpose & Vision**
-   - [ ] Merge Elevator Pitch into single paragraph
-   - [ ] Replace 1.1‑style headings with concise bullet list
-3. **Convert Core Concepts to Definition List**
-   - [ ] Replace table with `Term : Definition` format
-   - [ ] Add note about VS Code preview limitations for definition lists
-4. **Split Key Features Section**
-   - [ ] Separate into *Authoring* vs *Compiler* sub‑lists
-5. **Relocate Syntax Cheatsheet** ⚡ FAST TRACK
+   - [x] Merge Elevator Pitch into single paragraph
+   - [x] Replace 1.1‑style headings with concise bullet list
+3. **Convert Core Concepts to Definition List** ✅ (completed 2025-04-24T07:29:42-0400)
+   - [x] Replace table with `Term : Definition` format (completed 2025-04-24T07:29:42-0400)
+   - [x] Add note about VS Code preview limitations for definition lists (completed 2025-04-24T07:29:42-0400)
+4. **Split Key Features Section** ✅ (completed 2025-04-24T07:29:42-0400)
+   - [x] Separate into *Authoring* vs *Compiler* sub‑lists (completed 2025-04-24T07:29:42-0400)
+5. **Relocate Syntax Cheatsheet** ([ref](#todo-5-relocate-syntax-cheatsheet))
    - [ ] Create `docs/quick‑reference.md`
    - [ ] Link from overview
-6. **Modularize Full Syntax Reference**
+6. **Modularize Full Syntax Reference** ([ref](#todo-6-modularize-full-syntax-reference))
    - [ ] Break into dedicated spec files under `docs/spec/`
    - [ ] Introduce index page
-7. **Annotate Directory Structure** ⚡ FAST TRACK
+7. **Annotate Directory Structure** ([ref](#todo-7-annotate-directory-structure))
    - [ ] Add comments indicating ignored/generated directories
    - [ ] Add `.gitattributes` snippet for generated content
-8. **Update Roadmap with Dates**
+8. **Update Roadmap with Dates** ([ref](#todo-8-update-roadmap-with-dates))
    - [ ] Determine target quarters/semesters
    - [ ] Use consistent version numbering (v0.1, v0.2, etc.)
    - [ ] Insert into roadmap table
-9. **Automate Appendix Attribute Table**
+9. **Automate Appendix Attribute Table** ([ref](#todo-9-automate-appendix-attribute-table))
    - [ ] Write script to generate from schema
    - [ ] Replace manual table with generated include
    - [ ] Add table caption for accessibility
-10. **Implement Automation Hooks** ⚡ FAST TRACK
+10. **Implement Automation Hooks** ([ref](#todo-10-implement-automation-hooks))
     - [ ] Add `.markdownlint.yaml` with appropriate configuration
     - [ ] Configure Husky for pre-commit validation in package.json
     - [ ] Build docs builder pipeline
-11. **Create SECURITY.md** ⚡ FAST TRACK
+11. **Create SECURITY.md** ([ref](#todo-11-create-securitymd))
     - [ ] Document sandbox limits and placeholder whitelist
     - [ ] Add two-way linking with overview security section
     - [ ] Reference in overview
@@ -57,7 +58,7 @@
 
 ### Todo #2: Refactor Purpose & Vision
 
-*Reference: [Section 1. Purpose & Vision](#1-purpose--vision) in overview.md*
+*Reference: [Purpose & Vision](#purpose--vision) in overview.md*
 
 #### Current State
 
@@ -78,7 +79,7 @@ The Purpose & Vision section currently uses a 1.1, 1.2, 1.3 numbering system wit
 - Lack of a **machine-readable prompt spec** hinders automation, testing, and versioning.
 
 ### What You Get
-- A single source-of-truth **mix** file written in pure Markdown plus YAML front-matter
+- A single source-of-truth **mix** file written in pure Markdown plus YAML frontmatter
 - A compiler that parses your mix into an AST (sections, placeholders, mixins)
 - Rendering to target tools via plugin providers
 - Tool-specific **artifacts** written to predictable locations
@@ -94,65 +95,11 @@ The Purpose & Vision section currently uses a 1.1, 1.2, 1.3 numbering system wit
 
 ### Todo #3: Convert Core Concepts to Definition List
 
-*Reference: [Section 2. Core Concepts](#2-core-concepts) in overview.md*
-
-#### Current State
-
-Core concepts are currently presented in a table format with Term and Definition columns.
-
-#### Implementation Details
-
-1. Replace the table with a definition list using the following format:
-
-```markdown
-## Core Concepts
-
-**Mix**
-: Source Markdown file that is compiled into artifacts.
-
-**Artifact**
-: Tool-specific output file (e.g., `.cursor/rules/foo.mdc`).
-
-**Section**
-: Delimited block `{{section}}…{{/section}}` with optional attributes.
-
-**Mixin**
-: Re-usable include (`{{$my-include}}`) that can embed another mix/segment/template.
-
-**Placeholder**
-: Dynamic token replaced at build time (`{@alias}`, `{=data.key}`, `[ fill this in ]`).
-
-**Target**
-: A supported tool (Cursor, Roo Code, etc.) identified by an ID.
-
-**Target Group**
-: Named set of targets (`@ide`, `@cli`) for attribute filtering.
-```
-
-2. Add links to relevant specification sections for each term:
-
-```markdown
-**Mix** [↗](#7-full-syntax-reference-specification)
-: Source Markdown file that is compiled into artifacts.
-```
-
-3. Add a note about VS Code preview limitations:
-
-```markdown
-> **Note for VS Code users:** Definition lists may not render correctly in VS Code's built-in Markdown preview. This is expected behavior and will display correctly on GitHub and other CommonMark-compliant renderers.
-```
-
-#### Definition of Done
-
-- Table format is replaced with a definition list (Term : Definition)
-- Each term is bolded and linked to its relevant section in the specification
-- All original terms and definitions are preserved
-- Format follows CommonMark-compliant definition list syntax
-- Note added about VS Code preview limitations
+- Notes: Table in Section 2 replaced with a CommonMark-compliant definition list, spec links added for each term, and a VS Code preview limitation note included. See .agent/tasks.md for details.
 
 ### Todo #4: Split Key Features Section
 
-*Reference: [Section 3. Key Features](#3-key-features) in overview.md*
+*Reference: [Key Features](#key-features) in overview.md*
 
 #### Current State
 
@@ -194,7 +141,7 @@ Key features are presented as a single bullet list without categorization.
 
 ### Todo #5: Relocate Syntax Cheatsheet
 
-*Reference: [Section 6. Syntax Cheatsheet](#6-syntax-cheatsheet) in overview.md*
+*Reference: [Syntax Cheatsheet](#syntax-cheatsheet) in overview.md*
 
 #### Implementation Details
 
@@ -203,6 +150,7 @@ Key features are presented as a single bullet list without categorization.
 ```markdown
 # Mixdown Quick Reference
 
+> [!NOTE]
 > This is a condensed reference of Mixdown syntax. For complete details, see the [full specification](spec/mixdown-syntax.md).
 
 ## Syntax Elements
@@ -210,12 +158,12 @@ Key features are presented as a single bullet list without categorization.
 | Token / Feature | Example | Notes |
 |-----------------|---------|-------|
 | **Section** | `{{instructions title="Rules" export="cli"}}…{{/instructions}}` | Attributes control heading & export. |
-| **Front-matter** | `---\nname: foo\n---` | YAML at file top. |
+| **Frontmatter** | `---\nname: foo\n---` | YAML at file top. |
 | **Mixin Include** | `{{$legal no-title}}` | Embed another mix/include. |
-| **Internal Link** | `{>rules\|Read more}` | Auto-resolves per target path. |
+| **Internal Link Placeholder** | `{>rules\|Read more}` | Auto-resolves per target path. |
 | **Alias Placeholder** | `{@project}` | Resolved via alias chain. |
 | **Data Placeholder** | `{=user.email}` | Injects YAML data. |
-| **Static Fill-In** | `[ fill this in ]` | Marker for LLM to complete. |
+| **Fill-in Placeholder** | `[ problem statement ]` | Marker for LLM to complete. |
 
 ## Common Patterns
 
@@ -266,7 +214,7 @@ For a quick reference of Mixdown syntax elements and patterns, see the [Quick Re
 
 ### Todo #6: Modularize Full Syntax Reference
 
-*Reference: [Section 7. Full Syntax Reference](#7-full-syntax-reference-specification) in overview.md*
+*Reference: [Full Syntax Reference (Specification)](#full-syntax-reference-specification) in overview.md*
 
 #### Implementation Details
 
@@ -275,10 +223,10 @@ For a quick reference of Mixdown syntax elements and patterns, see the [Quick Re
 ```
 docs/spec/
 ├── mixdown-syntax.md          # Main syntax index
-├── sections-spec.md           # Section delimiters and attributes
-├── front-matter-spec.md       # Front-matter specification
+├── section-spec.md            # Section delimiters and attributes
+├── frontmatter-spec.md        # Frontmatter specification
 ├── placeholders-spec.md       # Placeholder syntax and resolution
-├── mixins-spec.md             # Mixin includes and attributes
+├── mixin-spec.md              # Mixin includes and attributes
 └── attributes-spec.md         # Complete attribute reference
 ```
 
@@ -287,7 +235,8 @@ docs/spec/
 ```markdown
 # Mixdown Syntax Specification
 
-This document serves as an index to the complete Mixdown syntax specification.
+> [!TIP]
+> This document serves as an index to the complete Mixdown syntax specification.
 
 ## Design Goals
 
@@ -300,10 +249,10 @@ This document serves as an index to the complete Mixdown syntax specification.
 
 ## Specification Documents
 
-- [**Sections**](sections-spec.md) - Section delimiters and attributes
-- [**Front-Matter**](front-matter-spec.md) - YAML metadata and configuration
+- [**Sections**](section-spec.md) - Section delimiters and attributes
+- [**Frontmatter**](frontmatter-spec.md) - YAML metadata and configuration
 - [**Placeholders**](placeholders-spec.md) - Dynamic tokens and resolution
-- [**Mixins**](mixins-spec.md) - Re-usable includes and templates
+- [**Mixins**](mixin-spec.md) - Re-usable includes and templates
 - [**Attributes**](attributes-spec.md) - Complete attribute reference
 
 ## Quick Start
@@ -320,10 +269,10 @@ See the [Quick Reference Guide](../quick-reference.md) for common syntax pattern
 
 For complete syntax details, see the [Mixdown Syntax Specification](docs/spec/mixdown-syntax.md), which covers:
 
-- [Section Delimiters](docs/spec/sections-spec.md)
-- [Front-Matter](docs/spec/front-matter-spec.md)
+- [Section Delimiters](docs/spec/section-spec.md)
+- [Frontmatter](docs/spec/frontmatter-spec.md)
 - [Placeholders](docs/spec/placeholders-spec.md)
-- [Mixins](docs/spec/mixins-spec.md)
+- [Mixins](docs/spec/mixin-spec.md)
 - [Attributes](docs/spec/attributes-spec.md)
 
 The specification documents provide normative definitions, examples, and edge cases.
@@ -339,7 +288,7 @@ The specification documents provide normative definitions, examples, and edge ca
 
 ### Todo #7: Annotate Directory Structure
 
-*Reference: [Section 9. Directory Structure](#9-directory-structure-monorepo) in overview.md*
+*Reference: [Directory Structure (Monorepo)](#directory-structure-monorepo) in overview.md*
 
 #### Implementation Details
 
@@ -404,7 +353,7 @@ This makes GitHub diff and PR files view hide generated content, reducing noise.
 
 ### Todo #8: Update Roadmap with Dates
 
-*Reference: [Section 12. Roadmap](#12-roadmap-high-level) in overview.md*
+*Reference: [Roadmap (High Level)](#roadmap-high-level) in overview.md*
 
 #### Implementation Details
 
@@ -413,18 +362,19 @@ This makes GitHub diff and PR files view hide generated content, reducing noise.
 ```markdown
 ## Roadmap
 
-| Phase | Target | Deliverables |
-|-------|--------|--------------|
-| **v0.1** | Q3 2024 | Core compiler, Cursor & Claude providers, `init`/`build`/`validate` CLI, `/compile` API. |
-| **v0.2** | Q4 2024 | Roo Code & Windsurf providers, provider SDK docs. |
-| **v0.3** | Q1 2025 | Prompt test harness, security hardening, >90% coverage. |
-| **v0.4** | Q2 2025 | Mix registry (`mixdown add @acme/rails-rules`), web playground. |
+| Phase | Deliverables |
+|-------|--------------|
+| **v0.1** | Core compiler, Cursor & Roo Code providers, `init`/`build`/`validate` CLI, `/compile` API. |
+| **v0.2** | Claude Code & Windsurf providers, provider SDK docs. |
+| **v0.3** | Prompt test harness, security hardening, >90% coverage. |
+| **v0.4** | Mix registry (`mixdown add @acme/rails-rules`), web playground. |
 ```
 
 2. Add a note about date flexibility:
 
 ```markdown
-> **Note:** Target dates are approximate and subject to change based on community feedback and priorities.
+> [!IMPORTANT]
+> Target dates are approximate and subject to change based on community feedback and priorities.
 ```
 
 #### Definition of Done
@@ -436,7 +386,7 @@ This makes GitHub diff and PR files view hide generated content, reducing noise.
 
 ### Todo #9: Automate Appendix Attribute Table
 
-*Reference: [Section 15.1 Comprehensive Attribute Reference](#151-comprehensive-attribute-reference-table) in overview.md*
+*Reference: [Comprehensive Attribute Reference Table](#comprehensive-attribute-reference-table) in overview.md*
 
 #### Implementation Details
 
@@ -454,7 +404,7 @@ const schema = yaml.load(fs.readFileSync(schemaPath, 'utf8'));
 
 // Generate markdown table
 let markdown = '<sub>Table 1: Complete Mixdown attribute reference with type, default values, and scope support</sub>\n\n';
-markdown += '| Attribute | Type | Default | Section | Mixin | Front-matter | Description |\n';
+markdown += '| Attribute | Type | Default | Section | Mixin | Frontmatter | Description |\n';
 markdown += '|-----------|------|---------|---------|-------|--------------|-------------|\n';
 
 Object.entries(schema.attributes).forEach(([name, attr]) => {
@@ -477,7 +427,7 @@ fs.writeFileSync(outputPath, markdown);
 
 // Also export as CSV
 const csvPath = path.join(__dirname, '../docs/generated/attributes-table.csv');
-const csvHeader = 'Attribute,Type,Default,Section,Mixin,Front-matter,Description\n';
+const csvHeader = 'Attribute,Type,Default,Section,Mixin,Frontmatter,Description\n';
 let csvContent = csvHeader;
 
 Object.entries(schema.attributes).forEach(([name, attr]) => {
@@ -526,7 +476,7 @@ For a machine-readable version of this data, see [attributes-table.csv](docs/gen
 **Notes:**
 - All attributes with string values can be scoped with target/group suffixes (e.g., `title@cursor="Cursor-specific title"`)
 - Flag attributes default to `true` when specified without a value
-- Target-specific front-matter keys override global values (e.g., `cursor: { description: "..." }`)
+- Target-specific frontmatter keys override global values (e.g., `cursor: { description: "..." }`)
 ```
 
 #### Definition of Done
@@ -540,7 +490,7 @@ For a machine-readable version of this data, see [attributes-table.csv](docs/gen
 
 ### Todo #10: Implement Automation Hooks
 
-*Reference: [Section 5. Automation Hooks](#5-automation-hooks-next-steps-for-ai-agents) in docs-improvements.md*
+*Reference: [Security, Testing & Performance](#security-testing--performance) in overview.md*
 
 #### Implementation Details
 
@@ -554,7 +504,7 @@ MD013:
   code_blocks: false
   tables: false
 MD033: false  # Inline HTML (allow for details/summary)
-MD041: false  # First line should be a heading (allow front-matter)
+MD041: false  # First line should be a heading (allow frontmatter)
 
 # Enforce TOC presence
 MD043:
@@ -667,7 +617,7 @@ console.log('Documentation build complete!');
 
 ### Todo #11: Create SECURITY.md
 
-*Reference: [Section 11. Security, Testing & Performance](#11-security-testing--performance) in overview.md*
+*Reference: [Security, Testing & Performance](#security-testing--performance) in overview.md*
 
 #### Implementation Details
 
@@ -678,6 +628,7 @@ console.log('Documentation build complete!');
 
 This document outlines the security considerations and constraints in Mixdown.
 
+> [!TIP]
 > See also the [Security, Testing & Performance](overview.md#security-testing--performance) section in the overview for a high-level summary.
 
 ## Security Model
@@ -701,14 +652,14 @@ The following placeholder operations are permitted:
 | `{@git_branch}` | Get current Git branch | Read-only, no arguments |
 | `{@git_version}` | Get Git version | Read-only, no arguments |
 | `{@date:format}` | Get formatted date | Specified date formats only |
-| `{@env:VAR}` | Access environment variable | Allowlisted variables only |
 
 ### Sandbox Constraints
 
 1. **No Network Access** - Dynamic placeholders cannot access the network
 2. **No File System Writes** - Operations are read-only
-3. **Resource Limits** - Execution time and memory are capped
-4. **Isolation** - Each operation runs in isolation from others
+3. **No Environment Variables** - Dynamic placeholders cannot access environment variables
+4. **Resource Limits** - Execution time and memory are capped
+5. **Isolation** - Each operation runs in isolation from others
 
 ## XML Parser Security
 
@@ -792,7 +743,6 @@ Please report security vulnerabilities via [private issue reporting](https://git
 - Typos and formatting issues are fixed
 - Proper heading levels are used throughout
 - Code blocks properly handle nested backticks
-</details>
 
 ## Guiding Principles
 
@@ -821,6 +771,7 @@ Please report security vulnerabilities via [private issue reporting](https://git
 ### Headings & IDs
 
 - Use `[gh-slug]` IDs: `## Core Concepts {#core-concepts}` so agents can create stable links.
+- Remove numbered IDs (e.g. `## 1. Core Concepts`) from headings.
 - Reserve H1 for doc title only.
 
 ### Lists
@@ -840,8 +791,13 @@ Please report security vulnerabilities via [private issue reporting](https://git
 
 ### Admonitions / Call‑outs
 
-- Adopt `>` blockquotes with emoji prefixes for tips/warnings (render nicely in GitHub):
-  > ⚠️ **Security Note:** Placeholder shell‑outs are whitelisted.
+- Adopt `>` blockquotes with `> [!<alert-type>]` prefix for different types of content.
+- Use content-specific alert type e.g. `[!NOTE]`, `[!TIP]`, `[!IMPORTANT]`, `[!CAUTION]`, `[!WARNING]`.
+
+```markdown
+> [!CAUTION]
+> **Security Note:** Placeholder shell‑outs are whitelisted.
+```
 
 ## Making Implicit Rules Explicit (for AI build agents)
 
@@ -912,130 +868,6 @@ Please report security vulnerabilities via [private issue reporting](https://git
 
 ## References & Resources
 
-- **CommonMark Spec** – <https://spec.commonmark.org/>
-- **Markdown‑lint** – <https://github.com/markdownlint/markdownlint>
-- **Keep a Changelog** – <https://keepachangelog.com/>
-</code_block_to_apply_changes_from>
-
-## Guiding Principles
-
-1. **Single‑responsibility docs** – keep the overview lightweight; deep dives live under `docs/`.
-2. **Consistent heading depth** – every top‑level H2 is a chapter; H3/H4 for sub‑topics.
-3. **CommonMark‑strict** – pass markdown‑lint; avoid HTML blocks where possible.
-4. **Machine‑friendly first** – mark all dynamic regions and decisions explicitly so coding agents don't guess.
-5. **Progressive disclosure** – surface key info early, link out for detail.
-
-## Structural Tweaks
-
-| Area | Current State | Suggested Change | Rationale |
-|------|---------------|------------------|-----------|
-| **Table of Contents** | Absent | Auto‑generate with `[TOC]` or plugin | Quick scan & link anchors |
-| **Purpose & Vision** | 1.1/1.2/1.3 numbering as H3 | Use bullets inside a single H2; slim to 3–4 sentences | Less visual noise, faster comprehension |
-| **Core Concepts** | Wide table | Switch to definition list (`Term : Definition`) | Easier diffing, copy‑pastable |
-| **Key Features** | Bullet list | Split into two sub‑lists: *Authoring* vs *Compiler* | Improves mental model |
-| **Syntax Cheatsheet** | Inline in overview | Move to `docs/quick‑reference.md`; link | Keep overview shorter |
-| **Full Syntax Ref** | Huge block | Break into >5 sub‑files under `docs/spec/` (sections, mixins, placeholders, front‑matter, DSL) | Navigable & maintainable |
-| **Directory Structure** | Code‑fence tree | Add comments `# ignored by Git`, `# generated` | Clarifies VCS boundaries |
-| **Roadmap table** | No dates | Add tentative quarter/half‑year targets | Gives stakeholders time horizon |
-| **Appendix attr table** | Massive | Auto‑generate from source YAML with script; include CSV export | Prevent drift, aid agents |
-
-## Formatting Conventions to Adopt
-
-### Headings & IDs
-
-- Use `[gh-slug]` IDs: `## Core Concepts {#core-concepts}` so agents can create stable links.
-- Reserve H1 for doc title only.
-
-### Lists
-
-- Four‑space indents for nested lists to match Markdown spec.
-- Prefer `-` bullets over `*` for consistency.
-
-### Tables
-
-- Left‑align all columns; wrap long cell text at 80 chars.
-- Include a caption: `<sub>Table X: …</sub>` for accessibility.
-
-### Code Fences
-
-- Always set language tag (` ```bash`, ` ```mermaid` ).
-- If output shown, use `output` tag (` ```output`).
-
-### Admonitions / Call‑outs
-
-- Adopt `>` blockquotes with emoji prefixes for tips/warnings (render nicely in GitHub):
-  > ⚠️ **Security Note:** Placeholder shell‑outs are whitelisted.
-
-## Making Implicit Rules Explicit (for AI build agents)
-
-| Concern | Current Implicit Detail | Needed Explicit Marker |
-|---------|------------------------|------------------------|
-| **Build‑artifact path** | Mentioned inline in prose | Declare once in front‑matter: `artifacts_dir: prompts/artifacts` |
-| **Placeholder scope order** | Explained narratively | Provide numbered list *and* example matrix table |
-| **Target group membership** | Not centrally defined | Add `groups.yaml` listing each tool→groups mapping |
-| **Reserved section names** | Scattered examples | Enumerate canonical list in spec with must/should language |
-| **Security constraints** | Inline bullets | Separate `SECURITY.md` referencing sandbox limits |
-
-## Section‑by‑Section Notes
-
-### Purpose & Vision
-
-- Merge Elevator Pitch into a bolded paragraph.
-- Follow with two bullet lists: **Why It Matters** / **What You Get**.
-
-### Core Concepts
-
-- Convert to definition list for better diffs.
-- Link each term to its dedicated spec subsection.
-
-### Key Features
-
-- Re‑frame as user stories (`As a **tool maintainer** I can…`).
-- Move Snapshot Testing bullet under **Quality** sub‑heading.
-
-### Supported Targets
-
-- Add *Min Mixdown Core Version* column so agents can warn on incompat‑ability.
-- Provide emoji legend in footnote.
-
-### Getting Started
-
-- Collapsible details block (`<details>` tag) for *install variations* to declutter.
-
-### Syntax Cheatsheet & Reference
-
-- Separate *Cheatsheet* (quick patterns) from *Reference* (normative, exhaustive).
-- Add inter‑doc x‑refs so AI agents can follow anchors without scraping.
-
-### Directory Structure
-
-- Annotate which dirs are **required**, **optional**, **generated**.
-- Call out `latest` symlink creation rules in a code comment.
-
-### System Architecture
-
-- Provide alt‑text and ASCII fallback for Mermaid.
-- Link each component label to code package path.
-
-### Roadmap
-
-- Number phases `v0.1`, `v0.2` instead of *MVP, 0.2* for semver clarity.
-
-## Automation Hooks (Next Steps for AI Agents)
-
-1. **markdown‑lint config** – commit a `.markdownlint.yaml` encoding new style rules.
-2. **Pre‑commit hook** – auto‑run `mixdown validate` and `npm run lint:md`.
-3. **Docs builder** – generate Quick Reference & Attribute CSV from schema so specs never drift.
-
-## Open Questions
-
-- Should *Plugin Provider* dev guide live in the monorepo or separate site?
-- Will the compiler enforce heading‑levels or only lint? Decide to avoid silent failures.
-- Any need for versioned docs (e.g., `/v0.3/`)?
-
-## References & Resources
-
-- **CommonMark Spec** – <https://spec.commonmark.org/>
-- **Markdown‑lint** – <https://github.com/markdownlint/markdownlint>
-- **Keep a Changelog** – <https://keepachangelog.com/>
-</rewritten_file>
+- [CommonMark Spec](https://spec.commonmark.org/)
+- [Markdown‑lint](https://github.com/markdownlint/markdownlint)
+- [Keep a Changelog](https://keepachangelog.com/)
