@@ -60,3 +60,5 @@
   - [x] Create simplified package.json with essential dependencies (completed 2025-04-18T10:03:22-0400)
   - [x] Delete pnpm-lock.yaml and reinstall dependencies (completed 2025-04-18T10:03:40-0400)
   - Notes: Successfully cleaned up package.json by removing unnecessary dependencies while keeping core functionality. Created backups of the original files for reference.
+- [x] Task: Convert Core Concepts to Definition List in overview.md ([ref](notes/docs-improvements.md), [ref](notes/overview.md)) (completed 2025-04-24T07:29:42-0400)
+  - Notes: Replaced the table in Section 2 with a CommonMark-compliant definition list, added spec links for each term, and included a VS Code preview limitation note as per docs-improvements.md Task 3.

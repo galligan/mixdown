@@ -193,7 +193,7 @@ Full spec lives in `docs/spec.md`.
 
 Sections are the core building block of Mixdown and stand-in for . They are used to create reusable content blocks that can be included in other sections or mixes.
 
-```md
+```markdown
 {{instructions heading="Rules" export="cli"}}
 Please follow these coding standards...
 {{/instructions}}
@@ -211,7 +211,7 @@ Please follow these coding standards...
 
 **Multi-line Tags** are allowed for readability, and the parser preserves this formatting:
 
-```md
+```markdown
 {{instructions
   heading="Rules"
   description="Section description."
@@ -222,7 +222,7 @@ Please follow these coding standards...
 
 If a new section starts before the previous is closed, the previous section is **auto-closed**. For example:
 
-```md
+```markdown
 <!-- Mixdown format -->
 {{section1}}
 Content A
@@ -245,7 +245,7 @@ Content B
 
 To nest sections, use **explicit closing** tags. Otherwise, each new section auto-closes the previous:
 
-```md
+```markdown
 <!-- Mixdown format -->
 {{outer}}
 {{inner}}Inner content{{/inner}}
@@ -265,7 +265,7 @@ Renders as:
 Attributes can be split across lines for readability. The parser preserves this formatting when writing XML tags:
 <!-- TODO -->
 
-```md
+```markdown
 <!-- Multi-line section tag in Mixdown format -->
 {{instructions
   heading="Rules"
@@ -291,7 +291,7 @@ Use `{{name ... /}}` for sections with only attributes and no inner content.
 
 Multiline tags are also supported with self-closing tags:
 
-```md
+```markdown
 <!-- Mixdown format -->
 {{note
   id="important"
@@ -333,23 +333,23 @@ Renders as:
 The `export` attribute allows you to export a section as a separate artifact for one or more specific targets. This is useful when you want a section to appear as its own file (artifact) for certain tools, while being inlined or omitted for others.
 
 - **How it works:**
-  - When a section includes `export="<target>[,<target2>,!<target3>]"`, Mixdown generates a separate artifact (file) for each listed target.
-  - The exported artifact is written to the appropriate directory for the target (e.g., `.cursor/rules/section-id.mdc` for Cursor).
-  - The section is removed or inlined in the main artifact for that target, depending on the provider's rules.
+    - When a section includes `export="<target>[,<target2>,!<target3>]"`, Mixdown generates a separate artifact (file) for each listed target.
+    - The exported artifact is written to the appropriate directory for the target (e.g., `.cursor/rules/section-id.mdc` for Cursor).
+    - The section is removed or inlined in the main artifact for that target, depending on the provider's rules.
 
 - **Syntax:**
-  - `export="cursor"` — Export this section as a separate file for Cursor only.
-  - `export="cursor,!windsurf"` — Export for Cursor, but not for Windsurf.
-  - You can use target groups: `export="@cli"`.
+    - `export="cursor"` — Export this section as a separate file for Cursor only.
+    - `export="cursor,!windsurf"` — Export for Cursor, but not for Windsurf.
+    - You can use target groups: `export="@cli"`.
 
 - **Link Resolution:**
-  - Internal links to exported sections (e.g., `{>my-rule#core-rules}`) are resolved differently per target:
-    - For Cursor, the link points to the exported artifact (e.g., `mdc:core-rules.mdc`).
-    - For Roo Code, the link may point to the section within the main file (e.g., `agent-instructions.md#core-rules`).
+    - Internal links to exported sections (e.g., `{>my-rule#core-rules}`) are resolved differently per target:
+        - For Cursor, the link points to the exported artifact (e.g., `mdc:core-rules.mdc`).
+        - For Roo Code, the link may point to the section within the main file (e.g., `agent-instructions.md#core-rules`).
 
 - **Example:**
 
-  ```md
+  ```markdown
   # My Rule
 
   {{core-rules export="cursor" heading="Core Coding Rules"}}
@@ -357,18 +357,20 @@ The `export` attribute allows you to export a section as a separate artifact for
   {{/core-rules}}
   ```
 
-  - For Cursor, this generates a separate file `.cursor/rules/core-rules.mdc` containing:
-    ```md
+    - For Cursor, this generates a separate file `.cursor/rules/core-rules.mdc` containing:
+
+    ```markdown
     # Core Coding Rules
     All commits *must* follow Conventional Commits.
     ```
+
     and links to `{>my-rule#core-rules}` resolve to `mdc:core-rules.mdc`.
-  - For Roo Code, the section remains inlined in the main file, and links resolve to `agent-instructions.md#core-rules`.
+    - For Roo Code, the section remains inlined in the main file, and links resolve to `agent-instructions.md#core-rules`.
 
 - **Best Practices:**
-  - Use `export` to avoid duplication and drift between tools that require different artifact structures.
-  - Use clear, unique section names/IDs for exported sections to ensure predictable artifact paths.
-  - Combine `export` with `heading` and target-specific overrides for maximum flexibility.
+    - Use `export` to avoid duplication and drift between tools that require different artifact structures.
+    - Use clear, unique section names/IDs for exported sections to ensure predictable artifact paths.
+    - Combine `export` with `heading` and target-specific overrides for maximum flexibility.
 
 ### Attributes
 
@@ -390,11 +392,11 @@ The `export` attribute allows you to export a section as a separate artifact for
 
 **Examples:**
 
-```md
+```markdown
 {{instructions no-xml heading="Rules" heading@cursor="Cursor Rules"}}
 ```
 
-```md
+```markdown
 {{rules export="cli" skip@cursor}}
 ```
 
@@ -407,7 +409,7 @@ You can use shortcuts for filtering sections by target or group within sections 
 
 **Examples:**
 
-```md
+```markdown
 {{instructions @@ide}}
 Visible only in IDE targets.
 {{/instructions}}
@@ -424,7 +426,7 @@ The `heading` attribute controls the heading that appears at the start of a sect
 - **Basic Use:**
     - `heading="My Section Heading"` injects a heading at the top of the section.
 
-    ```md
+    ```markdown
     {{instructions heading="Rules" no-xml}}
     Section content.
     {{/instructions}}
@@ -441,7 +443,7 @@ The `heading` attribute controls the heading that appears at the start of a sect
     - Use `?h-` to decrement the current heading level (e.g., if parent is `###`, this becomes `##`).
     - Example:
 
-    ```md
+    ```markdown
     {{section heading?h3="Subsection" no-xml}}
     Content.
     {{/section}}
@@ -458,7 +460,7 @@ The `heading` attribute controls the heading that appears at the start of a sect
     - If no value is provided (`heading?replace`), the section name is used as the heading.
     - Example:
 
-    ```md
+    ```markdown
     {{rules heading?replace="Core Rules" no-xml}}
     ## Old Heading
     Content.
@@ -474,7 +476,7 @@ The `heading` attribute controls the heading that appears at the start of a sect
     - Use `heading@<target>` or `heading@<group>` to override the heading for a specific target or group.
     - Example:
 
-    ```md
+    ```markdown
     {{instructions heading="General Rules" heading@cursor="Cursor Rules" no-xml}}
     Content.
     {{/instructions}}
@@ -589,7 +591,7 @@ cursor:
 
 **Examples:**
 
-```md
+```markdown
 - Name: {@user.name}
 - Email: {=user.email}
 - See: {>my-rule#core-rules|Core Rules}
@@ -600,7 +602,7 @@ cursor:
 
 Mixins allow you to include reusable content, mixes, or templates inline.
 
-```md
+```markdown
 <!-- Embed /prompts/includes/legal.md and suppress its heading -->
 {{$include:legal no-heading}}
 
@@ -625,7 +627,7 @@ Mixins allow you to include reusable content, mixes, or templates inline.
 - You can include only certain sections, suppress headings, or control alias resolution.
 - Example:
 
-```md
+```markdown
 {{$mix:incident-protocol
   as="protocol"
   no-heading
@@ -639,7 +641,7 @@ Mixins allow you to include reusable content, mixes, or templates inline.
 
 Authoring:
 
-```md
+```markdown
 {{example}}
 This is an examples section.
 {{example}}
@@ -650,7 +652,7 @@ Another example inside the examples section.
 
 Rendered (auto-closed):
 
-```md
+```markdown
 <example>
 This is an examples section.
 </example>
@@ -666,7 +668,7 @@ Another example inside the examples section.
 
 Proper nesting with explicit closures:
 
-```md
+```markdown
 {{examples}}
 Intro to examples.
   {{example}}First nested example.{{/example}}
@@ -676,7 +678,7 @@ Intro to examples.
 
 Rendered:
 
-```md
+```markdown
 <examples>
 Intro to examples.
   
@@ -687,7 +689,7 @@ Intro to examples.
 
 ### Target-Filter Shortcuts
 
-```md
+```markdown
 {{instructions @@ide}}
 Visible only in IDE targets like Cursor or Windsurf.
 {{/instructions}}
@@ -703,7 +705,7 @@ Visible only in CLI targets (Aider, Claude Code).
 
 ### Rich Section Attributes
 
-```md
+```markdown
 {{rules
   id="core-rules"
   heading="Core Coding Rules"
@@ -719,7 +721,7 @@ All commits *must* follow Conventional Commits.
 
 ### Placeholder Types in Action
 
-```md
+```markdown
 ### User Info
 - Name: {@user.name}
 - Email: {=user.email}
@@ -731,7 +733,7 @@ Aliases resolve in the documented order (mix → project → global), data is pu
 
 ### Mixin Include with Section Filtering
 
-```md
+```markdown
 {{$mix:incident-protocol
   as="protocol"
   no-heading
@@ -980,4 +982,4 @@ name: legacy-rule
 ---
 ```
 
-*© 2024 Mixdown contributors – MIT License.*
+*© 2025 Mixdown contributors – MIT License.*
