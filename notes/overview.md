@@ -194,16 +194,18 @@ Full spec lives in `docs/spec.md`.
 Sections are the core building block of Mixdown and stand-in for . They are used to create reusable content blocks that can be included in other sections or mixes.
 
 ```markdown
-{{instructions heading="Rules" export="cli"}}
+{{# instructions name="Rules & Instructions" export="cli" }}
 Please follow these coding standards...
 {{/instructions}}
 ```
 
 - **Section Tags Syntax**:
-    - **Open** `{{name ...}}`  
+    - **Open** `{{# name ...}}`  
     - **Close** `{{/name}}` (optional if another section starts)  
-    - **Self-close** `{{name ... /}}` (Attributes must precede the `/`)
+    - **Self-close** `{{# name ... /}}` (Attributes must precede the `/`)
 - **Section Tag Naming**:
+    - The `#` prefix makes it clear that this is a section tag
+    - A quoted string can be used for simple named sections: `{{# "My Section Title" }}`
     - `kebab-case` is recommended for section names
         - `snake_case` is also ok, but note that Markdown previews will treat the underscores as emphasis.
         - `spaced out` is works if you prefer to separate words with spaces.
@@ -212,8 +214,8 @@ Please follow these coding standards...
 **Multi-line Tags** are allowed for readability, and the parser preserves this formatting:
 
 ```markdown
-{{instructions
-  heading="Rules"
+{{# instructions
+  name="Rules & Instructions"
   description="Section description."
 }}
 ```
@@ -224,9 +226,9 @@ If a new section starts before the previous is closed, the previous section is *
 
 ```markdown
 <!-- Mixdown format -->
-{{section1}}
+{{# section1}}
 Content A
-{{section2}}
+{{# section2}}
 Content B
 
 ---
@@ -247,8 +249,8 @@ To nest sections, use **explicit closing** tags. Otherwise, each new section aut
 
 ```markdown
 <!-- Mixdown format -->
-{{outer}}
-{{inner}}Inner content{{/inner}}
+{{# outer}}
+{{# inner}}Inner content{{/inner}}
 {{/outer}}
 
 ---
@@ -263,14 +265,13 @@ Renders as:
 #### Multi-line Section Tags
 
 Attributes can be split across lines for readability. The parser preserves this formatting when writing XML tags:
-<!-- TODO -->
 
 ```markdown
 <!-- Multi-line section tag in Mixdown format -->
-{{instructions
-  heading="Rules"
+{{# instructions
+  name="Rules"
   description="These are the rules for the instructions section."
-  include-attributes="heading,description"}}
+  include-attributes="name,description"}}
 This is the content of the instructions section.
 {{/instructions}}
 
@@ -287,16 +288,16 @@ This is the content of the instructions section.
 
 #### Self-Closing Section Tags
 
-Use `{{name ... /}}` for sections with only attributes and no inner content.
+Use `{{# name ... /}}` for sections with only attributes and no inner content.
 
 Multiline tags are also supported with self-closing tags:
 
 ```markdown
 <!-- Mixdown format -->
-{{note
+{{# note
   id="important"
-  heading="Important Note"
-  include-attributes="id,heading"
+  name="Important Note"
+  include-attributes="id,name"
 /}}
 
 ---
@@ -313,20 +314,23 @@ Renders as:
 
 | Attribute | Type | Purpose |
 |-----------|------|---------|
-| `id` | string | Unique reference for `{>file#id}` links. |
-| `as` | string | Override the default section tag name in rendered XML. |
-| `heading` | string / `heading?h2="..."` | Inject a heading at the start of the section content and optionally specify heading level. |
+| `id` | string | Unique reference for section links. |
+| `name` | string | Primary name/title for the section; replaces the former `heading` attribute. |
 | `description` | string | Short blurb retained in rendered XML (if allowed). |
-| `filter` | list | Include/exclude targets (`filter="target=ide,!windsurf"`). |
+| `+/-target` | flag | Include/exclude for specific targets (e.g., `+cursor -windsurf`). |
 | `export` | list | Export section as its own artifact for listed targets. |
 | `format` | enum | Force rendered section output markdown to be formatted as `code`, `language`, `blockquote`, etc. |
-| `no-xml` | flag | Skip XML wrapping. Optional target list: `no-xml="ide"`. |
+| `!xml` | flag | Skip XML wrapping (formerly `no-xml`). Optional target list: `!xml="ide"`. |
 | `include-attributes` | list | Whitelist attributes preserved in rendered XML. |
-| `remove-first-heading` | flag | Strip first intra-section heading. |
+| `!heading` | flag | Strip first intra-section heading (formerly `no-heading`). |
 | *Custom* | any | Passed through untouched. |
 
 > [!TIP]
-> **Target-specific overrides**: append `@<target>` / `@<group>` (e.g. `heading@cursor="Cursor Rules"`). Precedence: explicit target → target group → default.
+> **Target-specific overrides**: Two formats supported:
+> 1. Using `@` notation: `key@<target>` (e.g., `name@cursor="Cursor Rules"`)
+> 2. Using `+/-` notation: `key+<target>` or `key-<target>` (e.g., `name+cursor="Cursor Rules"`)
+> 
+> Precedence: explicit target → target group → default.
 
 #### Section Exporting
 
@@ -339,11 +343,11 @@ The `export` attribute allows you to export a section as a separate artifact for
 
 - **Syntax:**
     - `export="cursor"` — Export this section as a separate file for Cursor only.
-    - `export="cursor,!windsurf"` — Export for Cursor, but not for Windsurf.
-    - You can use target groups: `export="@cli"`.
+    - `export="+cursor -windsurf"` — Export for Cursor, but not for Windsurf.
+    - You can use target groups: `export="+@cli"` or `export="-@ide"`.
 
 - **Link Resolution:**
-    - Internal links to exported sections (e.g., `{>my-rule#core-rules}`) are resolved differently per target:
+    - Internal links to exported sections are resolved differently per target:
         - For Cursor, the link points to the exported artifact (e.g., `mdc:core-rules.mdc`).
         - For Roo Code, the link may point to the section within the main file (e.g., `agent-instructions.md#core-rules`).
 
@@ -352,7 +356,7 @@ The `export` attribute allows you to export a section as a separate artifact for
   ```markdown
   # My Rule
 
-  {{core-rules export="cursor" heading="Core Coding Rules"}}
+  {{# core-rules export="+cursor" name="Core Coding Rules"}}
   All commits *must* follow Conventional Commits.
   {{/core-rules}}
   ```
@@ -377,57 +381,70 @@ The `export` attribute allows you to export a section as a separate artifact for
 #### Attribute Parsing
 
 - **Key-Value vs. Boolean Flags:**
-    - Key-value attributes use `key=value`. If the value contains spaces, quotes are required (e.g., `heading="Cursor Heading"`).
-    - Attributes without `=` are boolean flags considered `true` (e.g., `no-xml`).
-- **Scoping attributes with `@<target>` / `@<group>`:**
-    - Add `@<target>` or `@<group>` to scope an attribute to a specific target or group (e.g., `heading@cursor="Cursor Heading"`).
+    - Key-value attributes use `key=value`. If the value contains spaces, quotes are required (e.g., `name="Cursor Heading"`).
+    - Attributes with a `!` prefix are boolean flags considered `true` (e.g., `!xml` to skip XML wrapping).
+- **Targeting with `+/-` notation:**
+    - Use `+<target>` to include for a specific target (e.g., `+cursor` or `+@ide`).
+    - Use `-<target>` to exclude for a specific target (e.g., `-windsurf` or `-@cli`).
+    - Combine targets with comma separation: `+cursor,windsurf -vs-code-fork`.
+- **Scoping attributes with target notation:**
+    - Add `@<target>` to scope an attribute to a target (e.g., `name@cursor="Cursor Rules"`).
+    - Alternatively, use `+/-` notation: `name+cursor="Cursor Rules"` to include for a target.
     - Precedence: explicit target > target group > default.
-- **Modifiers with `?`:**
-    - Some attributes (like `heading`) support modifiers (e.g., `heading?h2="Rules"`).
+- **Modifiers with `:` notation:**
+    - Some attributes (like `name`) support modifiers for heading levels (e.g., `name:h2="Rules"`).
 - **Precedence and Overrides:**
     - Target-specific attributes override group or default values.
     - When multiple attributes apply, the most specific wins.
+    - For multiple target specifications, left-to-right precedence applies.
 - **Custom Attributes:**
     - Any custom attribute is allowed and will be passed through to the rendered XML, but is not interpreted by Mixdown (e.g., `my-attribute=my-value`).
 
 **Examples:**
 
 ```markdown
-{{instructions no-xml heading="Rules" heading@cursor="Cursor Rules"}}
+{{# instructions !xml name="Rules" name@cursor="Cursor Rules"}}
 ```
 
 ```markdown
-{{rules export="cli" skip@cursor}}
+{{# rules export="+cli" -cursor}}
 ```
 
 #### Shortcuts for Filtering Targets
 
-You can use shortcuts for filtering sections by target or group within sections and dynamic placeholders:
+You can use shorthand notation for filtering sections by target or group:
 
-- `@@<target>` — Only include for specified target (e.g., `@@cursor`, `@@ide`)
-- `!@<target>` — Exclude for specified target (e.g., `!@cli`, `!@roo-code`)
+- `+<target>` — Only include for specified target (e.g., `+cursor`, `+@ide`)
+- `-<target>` — Exclude for specified target (e.g., `-cli`, `-@roo-code`)
+- `+*` — Include for all targets
+- `-*` — Exclude for all targets
 
 **Examples:**
 
 ```markdown
-{{instructions @@ide}}
+{{# instructions +@ide}}
 Visible only in IDE targets.
 {{/instructions}}
 
-{{instructions !@cli}}
+{{# instructions -@cli}}
 Hidden from CLI targets.
+{{/instructions}}
+
+{{# instructions +cursor -*}}
+Only visible in Cursor, hidden from all other targets.
 {{/instructions}}
 ```
 
-#### Heading Attribute Options
+#### Name and Heading Attribute Options
 
-The `heading` attribute controls the heading that appears at the start of a section's content. It is highly flexible and supports several modifiers and overrides:
+The `name` attribute (which replaces the former `heading` attribute) controls the heading that appears at the start of a section's content. It is highly flexible and supports several modifiers and overrides:
 
 - **Basic Use:**
-    - `heading="My Section Heading"` injects a heading at the top of the section.
+    - `name="My Section Heading"` injects a heading at the top of the section.
+    - Alternatively, use the section-name shorthand: `{{# "My Section Heading" }}`
 
     ```markdown
-    {{instructions heading="Rules" no-xml}}
+    {{# instructions name="Rules" !xml}}
     Section content.
     {{/instructions}}
     
@@ -438,13 +455,13 @@ The `heading` attribute controls the heading that appears at the start of a sect
     ```
 
 - **Heading Level Modifiers:**
-    - Use `?h[1-6]` to force a specific heading level (e.g., `heading?h2="Rules"` → `## Rules`).
-    - Use `?h+` to increment the current heading level (e.g., if parent is `##`, this becomes `###`).
-    - Use `?h-` to decrement the current heading level (e.g., if parent is `###`, this becomes `##`).
+    - Use `:h[1-6]` to force a specific heading level (e.g., `name:h2="Rules"` → `## Rules`).
+    - Use `:h+` to increment the current heading level (e.g., if parent is `##`, this becomes `###`).
+    - Use `:h-` to decrement the current heading level (e.g., if parent is `###`, this becomes `##`).
     - Example:
 
     ```markdown
-    {{section heading?h3="Subsection" no-xml}}
+    {{# section name:h3="Subsection" !xml}}
     Content.
     {{/section}}
 
@@ -455,13 +472,13 @@ The `heading` attribute controls the heading that appears at the start of a sect
     ```
 
 - **Replace First Heading:**
-    - Use `heading?replace="New Heading"` to replace the first heading found in the section content with the value of `heading`.
-        - Note: This is useful primarily when embedding a mixin with an existing heading.
-    - If no value is provided (`heading?replace`), the section name is used as the heading.
+    - Use `name:replace="New Heading"` to replace the first heading found in the section content with the value of `name`.
+        - Note: This is useful primarily when embedding content with an existing heading.
+    - If no value is provided (`name:replace`), the section name is used as the heading.
     - Example:
 
     ```markdown
-    {{rules heading?replace="Core Rules" no-xml}}
+    {{# rules name:replace="Core Rules" !xml}}
     ## Old Heading
     Content.
     {{/rules}}
@@ -473,11 +490,11 @@ The `heading` attribute controls the heading that appears at the start of a sect
     ```
 
 - **Target/Group-Specific Overrides:**
-    - Use `heading@<target>` or `heading@<group>` to override the heading for a specific target or group.
+    - Use `name@<target>` or `name+<target>` to override the heading for a specific target or group.
     - Example:
 
     ```markdown
-    {{instructions heading="General Rules" heading@cursor="Cursor Rules" no-xml}}
+    {{# instructions name="General Rules" name@cursor="Cursor Rules" !xml}}
     Content.
     {{/instructions}}
 
@@ -490,6 +507,15 @@ The `heading` attribute controls the heading that appears at the start of a sect
 
     # General Rules
     Content.
+    ```
+
+- **Setting Just the Heading without Attributes:**
+    - To quickly set up just a heading without other attributes:
+
+    ```markdown
+    {{# "Core Rules"}}
+    Content goes here...
+    {{/"Core Rules"}}
     ```
 
 - **Notes on Heading Levels:**
@@ -534,9 +560,9 @@ target-groups:
 
 #### Target Group Usage
 
-- Use group names in attribute scopes (e.g., `heading@ide="Heading for IDEs"`).
-- Use in filter/export attributes (e.g., `filter="@cli,!windsurf"`).
-- Use shortcuts in `{{sections}}` to filter sections by target group (e.g., `{{instructions @@ide}}`).
+- Use group names in attribute scopes (e.g., `name@ide="Heading for IDEs"` or `name+@ide="Heading for IDEs"`).
+- Use in filter/export attributes (e.g., `export="+@cli -windsurf"`).
+- Use shortcuts in sections to filter by target group (e.g., `{{# instructions +@ide}}`).
 
 ### Front-Matter
 
@@ -642,11 +668,11 @@ Mixins allow you to include reusable content, mixes, or templates inline.
 Authoring:
 
 ```markdown
-{{example}}
+{{# example}}
 This is an examples section.
-{{example}}
+{{# example}}
 This is an example *inside* the examples section.
-{{example}}
+{{# example}}
 Another example inside the examples section.
 ```
 
@@ -669,10 +695,10 @@ Another example inside the examples section.
 Proper nesting with explicit closures:
 
 ```markdown
-{{examples}}
+{{# examples}}
 Intro to examples.
-  {{example}}First nested example.{{/example}}
-  {{example}}Second nested example.{{/example}}
+  {{# example}}First nested example.{{/example}}
+  {{# example}}Second nested example.{{/example}}
 {{/examples}}
 ```
 
@@ -690,27 +716,31 @@ Intro to examples.
 ### Target-Filter Shortcuts
 
 ```markdown
-{{instructions @@ide}}
+{{# instructions +@ide}}
 Visible only in IDE targets like Cursor or Windsurf.
 {{/instructions}}
 
-{{instructions !@ide}}
+{{# instructions -@ide}}
 Hidden from IDEs; visible everywhere else.
 {{/instructions}}
 
-{{instructions @@cli}}
+{{# instructions +@cli}}
 Visible only in CLI targets (Aider, Claude Code).
+{{/instructions}}
+
+{{# instructions +cursor -*}}
+Only visible in Cursor, excluded from all other targets.
 {{/instructions}}
 ```
 
 ### Rich Section Attributes
 
 ```markdown
-{{rules
+{{# rules
   id="core-rules"
-  heading="Core Coding Rules"
-  export="cursor"
-  include-attributes="heading"
+  name="Core Coding Rules"
+  export="+cursor"
+  include-attributes="name"
 }}
 All commits *must* follow Conventional Commits.
 {{/rules}}
