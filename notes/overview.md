@@ -95,13 +95,13 @@ Result: *author once, distribute everywhere, zero drift.*
 : Target-specific output file (e.g., `.cursor/rules/foo.mdc`).
 
 **Section** [↗](#sections)
-: Delimited block `{{section}}...{{/section}}` with optional attributes.
+: Delimited block `{{# section}}...{{/section}}` with optional attributes.
 
-**Mixin** [↗](#mixins)
-: Re-usable include (`{{$my-include}}`) that can embed another mix/segment/template.
+**Embed** [↗](#embeds)
+: Re-usable include (`{{> my-partial}}`) that can embed another mix/section/template.
 
-**Placeholder** [↗](#placeholders)
-: Dynamic token replaced at build time (`{@alias}`, `{=data.key}`, `[ fill this in ]`).
+**Insertion** [↗](#insertions)
+: Dynamic value replaced at build time (`{{ $alias }}`, `{{ $.data.key }}`, `[ fill this in ]`).
 
 **Target** [↗](#target-providers)
 : A supported tool (Cursor, Roo Code, etc.) identified by a `kebab-case` ID, e.g. `cursor`, `roo-code`.
@@ -168,12 +168,14 @@ The latest build is always symlinked at `prompts/artifacts/latest/`.
 
 | Token / Feature | Example | Notes |
 |-----------------|---------|-------|
-| **Section** | `{{instructions heading="Rules" export="cli"}}...{{/instructions}}` | Attributes control heading & export. |
+| **Section** | `{{# instructions name="Rules" export="+cli"}}...{{/instructions}}` | Attributes control name & export. |
 | **Front-matter** | `---\nname: foo\n---` | YAML at file top. |
-| **Mixin Include** | `{{$legal no-heading}}` | Embed another mix/include. |
-| **Internal Link** | `{>rules\|Read more}` | Auto-resolves per target path. |
-| **Alias Placeholder** | `{@project}` | Resolved via alias chain. |
-| **Data Placeholder** | `{=user.email}` | Injects YAML data. |
+| **Embed** | `{{> legal !heading}}` | Embed another partial. |
+| **Section Embed** | `{{#> legal}}` | Embed as a section. |
+| **Internal Link** | `[Read more](rules.md)` | Standard Markdown links. |
+| **Absolute Link** | `[Example](//src/example.ts)` | Links to project files. |
+| **Alias Insertion** | `{{ $project }}` | Resolved via alias chain. |
+| **Data Insertion** | `{{ $.user.email }}` | Injects YAML data. |
 | **Static Fill-In** | `[ fill this in ]` | Marker for LLM to complete. |
 
 Full spec lives in `docs/spec.md`.
@@ -589,76 +591,96 @@ cursor:
 ---
 ```
 
-### Placeholders
+### Insertions
 
 | Type | Syntax | Notes |
 |------|--------|-------|
 | **Static (AI note)** | `[ fill this in ]` | Human or AI-fillable placeholder |
-| **Alias** | `{@name}` | Alias lookup chain: front-matter → project → global. |
-| **Data** | `{=user.name}` | Injects YAML data from `prompts/data/user.yaml`. |
-| **Internal Link** | `{>file#section\|Alias}` | Path auto-resolved per target. |
+| **Alias** | `{{ $name }}` | Alias lookup chain: front-matter → project → alias.yaml. |
+| **Data** | `{{ $.user.name }}` | Injects YAML data from `prompts/data/user.yaml`. |
+| **Front-matter** | `{{ $.file.key }}` | Access current file's front-matter. |
+| **Internal Link** | `[Alias](file.md#section)` | Standard Markdown links. |
+| **Absolute Link** | `[Alias](//src/file.ts)` | Link to project files with `//` prefix. |
 
-**Built-in Alias Placeholders**:
+**Built-in System Insertions**:
 
-- `{@<target>}` → current target ID  
-- `{@<target>.name}` → display name from the provider manifest
-<!-- TODO -->
-**Placeholder Types:**
+- `{{ $target }}` → current target ID  
+- `{{ $target.name }}` → display name from the provider manifest
+
+**Insertion Types:**
 
 - **Static Placeholder:** `[ fill this in ]`
     - Used for human or AI fill-in. Not replaced by Mixdown.
     - You may add attributes: `[ placeholder attr="value" ]`
     - Spacing and word separation are flexible: `[ placeholder ]`, `[placeholder]`, `[separating-with-dashes]`.
-- **Dynamic Placeholders:**
-    - **Alias:** `{@name}` — Looks up alias in front-matter, project, or global scope.
-    - **Data:** `{=user.name}` — Injects YAML data from `prompts/data/user.yaml`.
-    - **Internal Link:** `{>file#section|Alias}` — Links to another mix or section.
-    - **Escaping:** Prefix with `\` to render as-is (e.g., `\{@alias}`).
+- **Dynamic Insertions:**
+    - **Alias:** `{{ $name }}` — Looks up alias in alias.yaml.
+    - **Data:** `{{ $.user.name }}` — Injects YAML data from `prompts/data/user.yaml`.
+    - **File Data:** `{{ $.file.key }}` or `{{ $.frontmatter.key }}` — Access current file's front-matter.
+    - **Internal Link:** Standard Markdown links: `[Core Rules](my-rule.md#core-rules)`
+    - **Link with Attributes:** `{{ /my-rule.md alias="Rules" key="value" }}` — Link with additional attributes.
+    - **Escaping:** Prefix with `\` to render as-is (e.g., `\{{ $alias }}`).
 
 **Examples:**
 
 ```markdown
-- Name: {@user.name}
-- Email: {=user.email}
-- See: {>my-rule#core-rules|Core Rules}
+- Name: {{ $user.name }}
+- Email: {{ $.user.email }}
+- See: [Core Rules](my-rule.md#core-rules)
+- Link with attributes: {{ /my-rule.md alias="Core Rules" }}
 - Please fill out: [ your escalation steps ]
 ```
 
-### Mixins
+### Embeds
 
-Mixins allow you to include reusable content, mixes, or templates inline.
+Embeds allow you to include reusable content, mixes, or templates inline.
 
 ```markdown
-<!-- Embed /prompts/includes/legal.md and suppress its heading -->
-{{$include:legal no-heading}}
+<!-- Embed /prompts/partials/legal.md and suppress its heading -->
+{{> legal !heading}}
+
+<!-- Embed as a section with attributes -->
+{{#> legal name="Legal Section"}}
 
 <!-- Embed /prompts/mixes/common-rules.md and include only section-1 and exclude section-2 -->
-{{$mix:common-rules sections="section-1,!section-2"}}
+{{> mix:common-rules sections="section-1,!section-2"}}
+
+<!-- Embed a specific section from the current mix -->
+{{> #section-name}}
+
+<!-- Embed a template -->
+{{> template:my-template}}
 ```
 
-#### Mixin Attributes
+#### Embed Attributes
 
 | Attribute | Purpose |
 |-----------|---------|
-| `as="alternate-name"` | Rename mixin on render; allows for flexibility in XML tag naming. |
-| `no-heading` | Suppress top heading of source. |
-| `no-mixins` | Strip nested mixins inside source. |
-| `include-frontmatter` | Bring source front-matter into caller. |
-| `alias-from="source"` | Choose alias resolution scope (`source` or `current`). |
+| `name="alternate-name"` | Rename embed on render; allows for flexibility in XML tag naming (replaces `as`). |
+| `!heading` | Suppress top heading of source (formerly `no-heading`). |
+| `!embeds` | Strip nested embeds inside source (formerly `no-mixins`). |
 | `sections="section-1,!section-2"` | Filter specific sections. |
 
-#### Mixin Advanced Usage
-<!-- TODO -->
-- Mixins can be nested, filtered, and aliased.
-- You can include only certain sections, suppress headings, or control alias resolution.
-- Example:
+#### Embed Advanced Usage
+
+- Embeds can be nested, filtered, and aliased.
+- You can include only certain sections, suppress headings, or target specific tools.
+- To embed as a section with attributes, use the `#>` prefix.
+- Examples:
 
 ```markdown
-{{$mix:incident-protocol
-  as="protocol"
-  no-heading
+<!-- Simple partial embed -->
+{{> legal !heading}}
+
+<!-- Embed as a section with attributes -->
+{{#> legal 
+  name="Legal Terms"
+  !embeds
   sections="summary,steps"
 }}
+
+<!-- Embed a specific section from a mix -->
+{{> mix:incident-protocol#summary}}
 ```
 
 ## Code Examples (Practical Snippets)
@@ -749,29 +771,41 @@ All commits *must* follow Conventional Commits.
 - **Cursor** sees `core-rules.mdc` as a separate file.  
 - **Roo Code** inlines the content with a `## Core Coding Rules` heading.
 
-### Placeholder Types in Action
+### Insertion Types in Action
 
 ```markdown
 ### User Info
-- Name: {@user.name}
-- Email: {=user.email}
-- Current Git Branch: {@git-branch}
+- Name: {{ $user.name }}
+- Email: {{ $.user.email }}
+- Current Git Branch: {{ $git-branch }}
+- Reference: [Core Rules](rules.md#core-rules)
+- Absolute Path: [Source File](//src/main.ts)
 - Please fill out: [ your escalation steps ]
 ```
 
-Aliases resolve in the documented order (mix → project → global), data is pulled from `prompts/data/user.yaml`, and the bracketed instruction remains for the LLM.
+Aliases resolve from `alias.yaml`, data is pulled from `prompts/data/user.yaml`, and standard Markdown links are used for references. The bracketed instruction remains for the LLM to complete.
 
-### Mixin Include with Section Filtering
+### Embed with Section Filtering
 
 ```markdown
-{{$mix:incident-protocol
-  as="protocol"
-  no-heading
+{{> mix:incident-protocol
+  name="protocol"
+  !heading
   sections="summary,steps"
 }}
 ```
 
-This embeds the *summary* and *steps* sections from `incident-protocol.md`, suppresses its heading, and aliases the section name to `protocol` in the caller mix.
+This embeds the *summary* and *steps* sections from `incident-protocol.md`, suppresses its heading, and aliases the section name to `protocol` in the caller mix. 
+
+Alternatively, as a section with attributes:
+
+```markdown
+{{#> mix:incident-protocol
+  name="Emergency Protocol"
+  !heading
+  sections="summary,steps"
+}}
+```
 
 ### Front-Matter Migration Cheat-Sheet
 
