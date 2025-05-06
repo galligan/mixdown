@@ -10,6 +10,7 @@
     - [Problem Statement](#problem-statement)
     - [Solution Overview](#solution-overview)
 - [Core Concepts](#core-concepts)
+    - [Terminology Notes](#terminology-notes)
 - [Key Features](#key-features)
     - [Authoring Features](#authoring-features)
     - [Compiler \& Integration](#compiler--integration)
@@ -30,23 +31,28 @@
     - [Attributes](#attributes)
         - [Attribute Parsing](#attribute-parsing)
         - [Shortcuts for Filtering Targets](#shortcuts-for-filtering-targets)
-        - [Heading Attribute Options](#heading-attribute-options)
+        - [Title and Heading Attribute Options](#title-and-heading-attribute-options)
     - [Target Groups](#target-groups)
         - [Default Target Groups](#default-target-groups)
         - [Custom Target Groups](#custom-target-groups)
         - [Target Group Usage](#target-group-usage)
     - [Front-Matter](#front-matter)
-    - [Placeholders](#placeholders)
-    - [Mixins](#mixins)
-        - [Mixin Attributes](#mixin-attributes)
-        - [Mixin Advanced Usage](#mixin-advanced-usage)
+        - [Target-Specific Front Matter](#target-specific-front-matter)
+    - [Placeholder Instructions](#placeholder-instructions)
+        - [Placeholder Formatting](#placeholder-formatting)
+    - [Insertions](#insertions)
+    - [Links](#links)
+    - [Embeds](#embeds)
+        - [Embed Attributes](#embed-attributes)
+        - [Self-Closing Embed Tags](#self-closing-embed-tags)
+        - [Embed Advanced Usage](#embed-advanced-usage)
+    - [Whitespace Handling](#whitespace-handling)
 - [Code Examples (Practical Snippets)](#code-examples-practical-snippets)
     - [Auto-Closing vs. Explicit Nesting](#auto-closing-vs-explicit-nesting)
     - [Target-Filter Shortcuts](#target-filter-shortcuts)
     - [Rich Section Attributes](#rich-section-attributes)
-    - [Placeholder Types in Action](#placeholder-types-in-action)
-    - [Mixin Include with Section Filtering](#mixin-include-with-section-filtering)
-    - [Front-Matter Migration Cheat-Sheet](#front-matter-migration-cheat-sheet)
+    - [Insertion Types in Action](#insertion-types-in-action)
+    - [Embed with Section Filtering](#embed-with-section-filtering)
 - [Directory Structure (Monorepo)](#directory-structure-monorepo)
     - [Documentation](#documentation)
 - [System Architecture](#system-architecture)
@@ -58,10 +64,6 @@
 - [References](#references)
 - [Appendix](#appendix)
     - [Comprehensive Attribute Reference Table](#comprehensive-attribute-reference-table)
-    - [Legacy Format](#legacy-format)
-        - [Why This Change?](#why-this-change)
-        - [At-a-Glance Changes](#at-a-glance-changes)
-        - [Front-Matter Migration Cheat-Sheet](#front-matter-migration-cheat-sheet-1)
 
 ## Purpose & Vision
 
@@ -79,7 +81,7 @@ Mixdown is a **CommonMark-compliant prompt compiler** that lets you author a sin
 
 Mixdown introduces a single source-of-truth **mix** file written (just a `.md` file) in pure Markdown plus YAML front-matter. The Mixdown compiler:
 
-1. Parses the mix into an AST (sections, placeholders, mixins).
+1. Parses the mix into an AST (sections, placeholders, embeds).
 2. Delegates rendering to *plugin providers*—one per target tool.
 3. Writes per-tool **artifacts** to predictable locations under `prompts/artifacts/builds/`.
 4. Optionally exposes a **CLI** and **HTTP/MCP API** so CI pipelines or agents can fetch fresh rules on demand.
@@ -95,24 +97,32 @@ Result: *author once, distribute everywhere, zero drift.*
 : Target-specific output file (e.g., `.cursor/rules/foo.mdc`).
 
 **Section** [↗](#sections)
-: Delimited block `{{# section}}...{{/section}}` with optional attributes.
+: Delimited block `{{# section }}...{{/section}}` with optional attributes.
 
 **Embed** [↗](#embeds)
-: Re-usable include (`{{> my-partial}}`) that can embed another mix/section/template.
+: Re-usable content inclusion mechanism (`{{> my-partial }}`) that can incorporate content from another mix/section/template.
 
-**Insertion** [↗](#insertions)
+**Insertion** [↗](#insertions
 : Dynamic value replaced at build time (`{{ $alias }}`, `{{ $.data.key }}`, `[ fill this in ]`).
 
 **Target** [↗](#target-providers)
 : A supported tool (Cursor, Roo Code, etc.) identified by a `kebab-case` ID, e.g. `cursor`, `roo-code`.
 
 **Target Group** [↗](#target-groups)
-: Named set of targets (`@cursor`, `@ide`, `@cli`) for attribute filtering.
+: Named set of targets (`ide`, `cli`) for attribute filtering.
 
 > [!IMPORTANT]
 > **Note for VS Code users:**
 > Definition lists may not render correctly in VS Code's built-in Markdown preview.
 > This is expected behavior and will display correctly on GitHub and other CommonMark-compliant renderers.
+
+### Terminology Notes
+
+To maintain consistency throughout the documentation and codebase:
+
+- **Embed vs. embed**:
+    - "Embed" (noun, capitalized) refers to the inclusion mechanism itself (the `{{> partial }}` feature).
+    - "embed" (verb, lowercase) is the action of including content from one file in another.
 
 ## Key Features
 
@@ -120,7 +130,7 @@ Result: *author once, distribute everywhere, zero drift.*
 
 - **100% CommonMark** – Renders cleanly in GitHub & VS Code; passes markdown-lint.
 - **Granular Sections** – Export, filter, or replace section headings per-target.
-- **Powerful Placeholders** – Aliases, YAML data injections, runtime values (`{@git-branch}`) with sandboxed resolvers.
+- **Powerful Build-time Insertions** – Aliases, YAML data injections, and more, with sandboxed resolvers.
 
 ### Compiler & Integration
 
@@ -156,7 +166,7 @@ npm install --save-dev mixdown
 ```bash
 mixdown init          # scaffolds prompts/ & .mixdown/
 cd prompts/instructions
-echo "---\nname: hello\n---\n{{system}}Hi!{{/system}}" > hello.md
+echo "---\nname: hello\n---\n{{system}}Hi!{{/system}}" > hello.md # TODO: We need to come up with a better example. This isn't valid.
 cd ../..
 
 mixdown build         # writes artifacts under prompts/artifacts/
@@ -168,15 +178,15 @@ The latest build is always symlinked at `prompts/artifacts/latest/`.
 
 | Token / Feature | Example | Notes |
 |-----------------|---------|-------|
-| **Section** | `{{# instructions name="Rules" export="+cli"}}...{{/instructions}}` | Attributes control name & export. |
-| **Front-matter** | `---\nname: foo\n---` | YAML at file top. |
-| **Embed** | `{{> legal !heading}}` | Embed another partial. |
-| **Section Embed** | `{{#> legal}}` | Embed as a section. |
+| **Section** | `{{# instructions title="Rules" export="cli" }}...{{/instructions}}` | Attributes control titles & export. |
+| **Front-matter** | `---\ntitle: foo\n---` | YAML at file top. |
+| **Embed** | `{{> legal !heading }}` | Embed another partial. |
+| **Section Embed** | `{{#> legal }}` | Embed as a section. |
 | **Internal Link** | `[Read more](rules.md)` | Standard Markdown links. |
 | **Absolute Link** | `[Example](//src/example.ts)` | Links to project files. |
 | **Alias Insertion** | `{{ $project }}` | Resolved via alias chain. |
 | **Data Insertion** | `{{ $.user.email }}` | Injects YAML data. |
-| **Static Fill-In** | `[ fill this in ]` | Marker for LLM to complete. |
+| **Placeholder Instructions** | `[ fill this in ]` | Marker for LLM to complete. |
 
 Full spec lives in `docs/spec.md`.
 
@@ -193,31 +203,33 @@ Full spec lives in `docs/spec.md`.
 
 ### Sections
 
-Sections are the core building block of Mixdown and stand-in for . They are used to create reusable content blocks that can be included in other sections or mixes.
+Sections are the core building block of Mixdown and are a direct stand in for XML `<section>` tags. They are used to create reusable content blocks that can be included in other sections or mixes.
 
 ```markdown
-{{# instructions name="Rules & Instructions" export="cli" }}
+{{# instructions title="Rules & Instructions" export="cli" }}
 Please follow these coding standards...
 {{/instructions}}
 ```
 
 - **Section Tags Syntax**:
-    - **Open** `{{# name ...}}`  
-    - **Close** `{{/name}}` (optional if another section starts)  
-    - **Self-close** `{{# name ... /}}` (Attributes must precede the `/`)
-- **Section Tag Naming**:
+    - **Open** `{{# section-name ... }}`
+    - **Close** `{{/section-name}}` (optional if another section starts)
+    - **Self-close** `{{# section-name ... /}}` (Attributes must precede the `/`)
+- **Section Tag Names**:
     - The `#` prefix makes it clear that this is a section tag
-    - A quoted string can be used for simple named sections: `{{# "My Section Title" }}`
     - `kebab-case` is recommended for section names
         - `snake_case` is also ok, but note that Markdown previews will treat the underscores as emphasis.
         - `spaced out` is works if you prefer to separate words with spaces.
     - Regardless of the naming convention, XML tag names in artifacts will render as `<snake_case>`
-
+- **Section Names as Headings**:
+    - A quoted string can be used for sections, which will render as a heading: `{{# "Section Name" }}`
+        - This is the equivalent of writing `{{# section-name title="Section Name" }}`
+<!-- TODO: Add clarity around heading rendering when `title` is used -->
 **Multi-line Tags** are allowed for readability, and the parser preserves this formatting:
 
 ```markdown
 {{# instructions
-  name="Rules & Instructions"
+  title="Rules & Instructions"
   description="Section description."
 }}
 ```
@@ -228,9 +240,9 @@ If a new section starts before the previous is closed, the previous section is *
 
 ```markdown
 <!-- Mixdown format -->
-{{# section1}}
+{{# section1 }}
 Content A
-{{# section2}}
+{{# section2 }}
 Content B
 
 ---
@@ -251,8 +263,8 @@ To nest sections, use **explicit closing** tags. Otherwise, each new section aut
 
 ```markdown
 <!-- Mixdown format -->
-{{# outer}}
-{{# inner}}Inner content{{/inner}}
+{{# outer }}
+{{# inner }}Inner content{{/inner}}
 {{/outer}}
 
 ---
@@ -271,9 +283,9 @@ Attributes can be split across lines for readability. The parser preserves this 
 ```markdown
 <!-- Multi-line section tag in Mixdown format -->
 {{# instructions
-  name="Rules"
+  title="Rules"
   description="These are the rules for the instructions section."
-  include-attributes="name,description"}}
+  include-attributes="title,description" }}
 This is the content of the instructions section.
 {{/instructions}}
 
@@ -282,7 +294,7 @@ This is the content of the instructions section.
 Renders as:
 <!-- XML output -->
 <instructions
-  heading="Rules"
+  title="Rules"
   description="These are the rules for the instructions section.">
 This is the content of the instructions section.
 </instructions>
@@ -297,18 +309,14 @@ Multiline tags are also supported with self-closing tags:
 ```markdown
 <!-- Mixdown format -->
 {{# note
-  id="important"
-  name="Important Note"
-  include-attributes="id,name"
+  title="Important Note"
+  include-attributes="title"
 /}}
-
----
 
 Renders as:
 <!-- XML output -->
 <note
-  id="important"
-  heading="Important Note"
+  title="Important Note"
 />
 ```
 
@@ -316,49 +324,56 @@ Renders as:
 
 | Attribute | Type | Purpose |
 |-----------|------|---------|
-| `id` | string | Unique reference for section links. |
-| `name` | string | Primary name/title for the section; replaces the former `heading` attribute. |
+| `title` | string | Primary name/title for the section which can render as a Markdown heading. |
 | `description` | string | Short blurb retained in rendered XML (if allowed). |
 | `+/-target` | flag | Include/exclude for specific targets (e.g., `+cursor -windsurf`). |
 | `export` | list | Export section as its own artifact for listed targets. |
 | `format` | enum | Force rendered section output markdown to be formatted as `code`, `language`, `blockquote`, etc. |
-| `!xml` | flag | Skip XML wrapping (formerly `no-xml`). Optional target list: `!xml="ide"`. |
+| `!xml` | flag | Skip XML wrapping. Optional target list: `!xml="ide"`. |
 | `include-attributes` | list | Whitelist attributes preserved in rendered XML. |
-| `!heading` | flag | Strip first intra-section heading (formerly `no-heading`). |
+| `!heading` | flag | Strip first intra-section heading. |
 | *Custom* | any | Passed through untouched. |
 
 > [!TIP]
-> **Target-specific overrides**: Two formats supported:
-> 1. Using `@` notation: `key@<target>` (e.g., `name@cursor="Cursor Rules"`)
-> 2. Using `+/-` notation: `key+<target>` or `key-<target>` (e.g., `name+cursor="Cursor Rules"`)
-> 
+> **Target-specific overrides**:
+>
+> Using `+` delimiter: `key+<target>` (e.g., `title+cursor="Cursor Rules"`)
+>
 > Precedence: explicit target → target group → default.
 
 #### Section Exporting
 
-The `export` attribute allows you to export a section as a separate artifact for one or more specific targets. This is useful when you want a section to appear as its own file (artifact) for certain tools, while being inlined or omitted for others.
+The `export` attribute allows you to export a section as a separate artifact for one or more specific targets. This is useful when you want a section to appear as its own file (artifact) for certain tools, while being inlined or omitted for others. Unlike filtering attributes, `export` is inclusion-only — you specify which targets should receive the exported section.
 
 - **How it works:**
-    - When a section includes `export="<target>[,<target2>,!<target3>]"`, Mixdown generates a separate artifact (file) for each listed target.
+    - When a section includes `export="<target>[,<target2>]"`, Mixdown generates a separate artifact (file) for each listed target.
     - The exported artifact is written to the appropriate directory for the target (e.g., `.cursor/rules/section-id.mdc` for Cursor).
     - The section is removed or inlined in the main artifact for that target, depending on the provider's rules.
-
 - **Syntax:**
     - `export="cursor"` — Export this section as a separate file for Cursor only.
-    - `export="+cursor -windsurf"` — Export for Cursor, but not for Windsurf.
-    - You can use target groups: `export="+@cli"` or `export="-@ide"`.
-
-- **Link Resolution:**
+    - `export="cursor,claude-code"` — Export for multiple targets (comma-separated).
+    - You can use target groups: `export="cli"` or `export="desktop"`.
+- **Link Resolution and Validation:**
     - Internal links to exported sections are resolved differently per target:
         - For Cursor, the link points to the exported artifact (e.g., `mdc:core-rules.mdc`).
         - For Roo Code, the link may point to the section within the main file (e.g., `agent-instructions.md#core-rules`).
+    - The compiler validates all internal links during compilation, emitting warnings for unresolved links.
+    - In strict mode, unresolved links will cause build failures.
+- **Cross-Mix Link Resolution:**
+    - Links targeting other mix files (`[text](other-mix.md)`) are automatically resolved.
+    - The compiler builds an index of all mix front-matter `name` values at start of compilation.
+    - For cross-mix section references (`[text](other-mix.md#section-name)`), the compiler validates both the mix file and the section existence.
+- **Export-Aware Link Transformation:**
+    - Provider plugins can implement the hook `transformLink(href, context)` to rewrite links based on the export mapping.
+    - This enables links to automatically adapt to the target's expected format and organization.
+    - Example: `[Rules](mix.md#rules)` might become `[Rules](mdc:rules.mdc)` for Cursor, but stay `[Rules](mix.md#rules)` for Roo Code.
 
 - **Example:**
 
   ```markdown
   # My Rule
 
-  {{# core-rules export="+cursor" name="Core Coding Rules"}}
+  {{# core-rules export="cursor" title="Core Coding Rules" }}
   All commits *must* follow Conventional Commits.
   {{/core-rules}}
   ```
@@ -370,31 +385,31 @@ The `export` attribute allows you to export a section as a separate artifact for
     All commits *must* follow Conventional Commits.
     ```
 
-    and links to `{>my-rule#core-rules}` resolve to `mdc:core-rules.mdc`.
+    and links to `[my rule](core-rules.md)` resolve to `mdc:core-rules.mdc`.
     - For Roo Code, the section remains inlined in the main file, and links resolve to `agent-instructions.md#core-rules`.
 
 - **Best Practices:**
     - Use `export` to avoid duplication and drift between tools that require different artifact structures.
     - Use clear, unique section names/IDs for exported sections to ensure predictable artifact paths.
-    - Combine `export` with `heading` and target-specific overrides for maximum flexibility.
+    - Combine `export` with `name` and target-specific overrides for maximum flexibility.
+    - Remember that `export` is inclusion-only — if you need to exclude targets, use filtering attributes instead.
 
 ### Attributes
 
 #### Attribute Parsing
 
 - **Key-Value vs. Boolean Flags:**
-    - Key-value attributes use `key=value`. If the value contains spaces, quotes are required (e.g., `name="Cursor Heading"`).
+    - Key-value attributes use `key=value`. If the value contains spaces, quotes are required (e.g., `title="Cursor Heading"`).
     - Attributes with a `!` prefix are boolean flags considered `true` (e.g., `!xml` to skip XML wrapping).
-- **Targeting with `+/-` notation:**
-    - Use `+<target>` to include for a specific target (e.g., `+cursor` or `+@ide`).
-    - Use `-<target>` to exclude for a specific target (e.g., `-windsurf` or `-@cli`).
+- **Targeting with `+/-` delimiters:**
+    - Use `+<target>` to include for a specific target (e.g., `+cursor` or `+ide`).
+    - Use `-<target>` to exclude for a specific target (e.g., `-windsurf` or `-cli`).
     - Combine targets with comma separation: `+cursor,windsurf -vs-code-fork`.
-- **Scoping attributes with target notation:**
-    - Add `@<target>` to scope an attribute to a target (e.g., `name@cursor="Cursor Rules"`).
-    - Alternatively, use `+/-` notation: `name+cursor="Cursor Rules"` to include for a target.
+- **Scoping attributes with target delimiters:**
+    - Add `+<target>` to scope an attribute to a target (e.g., `title+cursor="Cursor Rules"`).
     - Precedence: explicit target > target group > default.
-- **Modifiers with `:` notation:**
-    - Some attributes (like `name`) support modifiers for heading levels (e.g., `name:h2="Rules"`).
+- **Modifiers with `?` delimiters:**
+    - Some attributes (like `title`) support modifiers for heading levels (e.g., `title?h2="Rules"`).
 - **Precedence and Overrides:**
     - Target-specific attributes override group or default values.
     - When multiple attributes apply, the most specific wins.
@@ -405,65 +420,71 @@ The `export` attribute allows you to export a section as a separate artifact for
 **Examples:**
 
 ```markdown
-{{# instructions !xml name="Rules" name@cursor="Cursor Rules"}}
+{{# instructions !xml title="Core Rules" title+cursor="Cursor Rules" }}
 ```
 
 ```markdown
-{{# rules export="+cli" -cursor}}
+{{# rules export="cli" -cursor }}
 ```
 
 #### Shortcuts for Filtering Targets
 
-You can use shorthand notation for filtering sections by target or group:
+You can use shorthand notation using delimiters for filtering sections by target or group:
 
-- `+<target>` — Only include for specified target (e.g., `+cursor`, `+@ide`)
-- `-<target>` — Exclude for specified target (e.g., `-cli`, `-@roo-code`)
+- `+<target>` — Only include for specified target (e.g., `+cursor`, `+ide`)
+- `-<target>` — Exclude for specified target (e.g., `-cli`, `-roo-code`)
 - `+*` — Include for all targets
 - `-*` — Exclude for all targets
+
+**Precedence Rules:**
+
+- When a target exists in multiple groups with conflicting filters, explicit target specifications take precedence over group specifications.
+- For conflicting patterns (e.g., `+cursor -cursor`), Mixdown will provide a warning or error in strict mode.
+- The character set for target IDs is limited to lowercase letters, numbers, and hyphens (`a-z0-9-`).
 
 **Examples:**
 
 ```markdown
-{{# instructions +@ide}}
+{{# instructions +ide }}
 Visible only in IDE targets.
-{{/instructions}}
+{{/instructions }}
 
-{{# instructions -@cli}}
+{{# instructions -cli }}
 Hidden from CLI targets.
 {{/instructions}}
 
-{{# instructions +cursor -*}}
+{{# instructions -* +cursor }}
 Only visible in Cursor, hidden from all other targets.
 {{/instructions}}
 ```
 
-#### Name and Heading Attribute Options
-
-The `name` attribute (which replaces the former `heading` attribute) controls the heading that appears at the start of a section's content. It is highly flexible and supports several modifiers and overrides:
+#### Title and Heading Attribute Options
+<!-- TODO: Double check this section -->
+The `title` attribute controls the heading that appears at the start of a section's content. As noted in the [Terminology Notes](#terminology-notes), "name" is the section's identifier (implied by the section tag name), while "title" refers to the actual rendered heading level. The `title` attribute is highly flexible and supports several modifiers and overrides:
 
 - **Basic Use:**
-    - `name="My Section Heading"` injects a heading at the top of the section.
-    - Alternatively, use the section-name shorthand: `{{# "My Section Heading" }}`
+    - `title="My Section Heading"` injects a heading at the top of the section.
+    - Alternatively, use the section-title shorthand: `{{# "My Section Heading" }}`
 
     ```markdown
-    {{# instructions name="Rules" !xml}}
+    {{# instructions title="Rules" !xml }}
     Section content.
     {{/instructions}}
-    
+  
     Renders as:
-    
+  
     # Rules
     Section content.
     ```
 
 - **Heading Level Modifiers:**
-    - Use `:h[1-6]` to force a specific heading level (e.g., `name:h2="Rules"` → `## Rules`).
-    - Use `:h+` to increment the current heading level (e.g., if parent is `##`, this becomes `###`).
-    - Use `:h-` to decrement the current heading level (e.g., if parent is `###`, this becomes `##`).
+    - Use `title?h[1-6]` to force a specific heading level (e.g., `title?h2="Rules"` → `## Rules`).
+    - Use `title?h:inc` to increment the current heading level (e.g., if parent is `##`, this becomes `###`).
+    - Use `title?h:dec` to decrement the current heading level (e.g., if parent is `###`, this becomes `##`).
     - Example:
 
     ```markdown
-    {{# section name:h3="Subsection" !xml}}
+    {{# section title?h3="Subsection" !xml }}
     Content.
     {{/section}}
 
@@ -474,13 +495,13 @@ The `name` attribute (which replaces the former `heading` attribute) controls th
     ```
 
 - **Replace First Heading:**
-    - Use `name:replace="New Heading"` to replace the first heading found in the section content with the value of `name`.
+    - Use `title?replace="New Heading"` to replace the first heading found in the section content with the value of `title`.
         - Note: This is useful primarily when embedding content with an existing heading.
-    - If no value is provided (`name:replace`), the section name is used as the heading.
+    - If no value is provided (`title?replace`), the section title is used as the heading.
     - Example:
 
     ```markdown
-    {{# rules name:replace="Core Rules" !xml}}
+    {{# rules title?replace="Core Rules" !xml }}
     ## Old Heading
     Content.
     {{/rules}}
@@ -492,11 +513,11 @@ The `name` attribute (which replaces the former `heading` attribute) controls th
     ```
 
 - **Target/Group-Specific Overrides:**
-    - Use `name@<target>` or `name+<target>` to override the heading for a specific target or group.
+    - Use `title+<target>` to override the heading for a specific target or group.
     - Example:
 
     ```markdown
-    {{# instructions name="General Rules" name@cursor="Cursor Rules" !xml}}
+    {{# instructions title="General Rules" title+cursor="Cursor Rules" !xml }}
     Content.
     {{/instructions}}
 
@@ -515,9 +536,9 @@ The `name` attribute (which replaces the former `heading` attribute) controls th
     - To quickly set up just a heading without other attributes:
 
     ```markdown
-    {{# "Core Rules"}}
+    {{# "Core Rules" }}
     Content goes here...
-    {{/"Core Rules"}}
+    {{/ "Core Rules"}}
     ```
 
 - **Notes on Heading Levels:**
@@ -559,12 +580,12 @@ target-groups:
     include: [zed]
     exclude: [windsurf]
 ```
-
+<!-- TODO: Address exporting -->
 #### Target Group Usage
 
-- Use group names in attribute scopes (e.g., `name@ide="Heading for IDEs"` or `name+@ide="Heading for IDEs"`).
-- Use in filter/export attributes (e.g., `export="+@cli -windsurf"`).
-- Use shortcuts in sections to filter by target group (e.g., `{{# instructions +@ide}}`).
+- Use group names in attribute scopes (e.g., `title+ide="Heading for IDEs"`).
+- Use in filter/export attributes (e.g., `export="cli"`).
+- Use shortcuts in sections to filter by target group (e.g., `{{# instructions +ide }}`).
 
 ### Front-Matter
 
@@ -574,92 +595,210 @@ target-groups:
 name: my-rule
 version: 1.0.0
 labels: ["core", "security"]
-# Target filter examples:
-# targets: ["cursor", "!windsurf", "@cli"]
+# Target filter examples using standard keys:
+targets:
+  include: ["cursor", "cli"]
+  exclude: ["windsurf"]
 ---
 ```
 
-Provider plugins declare allowed and required front-matter keys within their manifests using the `types.<artifact>.allowedkeys` and `types.<artifact>.required-keys` arrays respectively (see example in Section 7.9). Missing `required-keys` will raise build errors, ensuring necessary metadata is present for each artifact type. In some cases, such as `globs`, the target may require a key to be present, but a value is not required.
+Provider plugins declare allowed and required front-matter keys within their manifests using the `types.<artifact>.allowedkeys` and `types.<artifact>.required-keys` arrays respectively. Missing `required-keys` will raise build errors, ensuring necessary metadata is present for each artifact type. In some cases, such as `globs`, the target may require a key to be present, but a value is not required.
 
-*Target-specific overrides*:
+#### Target-Specific Front Matter
 
-```yaml
----
-description: General description
-cursor:
-  description: Cursor-specific description
----
-```
+Front-matter supports several approaches for target scoping and configuration:
+
+1. **Standard Target Filter Keys**:
+
+   ```yaml
+   targets:
+     include: ["cursor", "cli"]  # Include only these targets/groups
+     exclude: ["windsurf"]        # Exclude these targets/groups
+   ```
+
+   - Note: The `+/-` delimiters used in section attributes do NOT apply in front-matter
+   - Full target names or group names must be used instead
+
+2. **Target-Specific Override Blocks**:
+
+   ```yaml
+   ---
+   description: General description  # Default for all targets
+   cursor:                           # Override block for Cursor target
+     description: Cursor-specific description
+   roo-code:                       # Quotes needed for kebab-case
+     file: "roo-code-instructions"
+   ide:                           # Target group override
+     icon: "🖥️"
+   ---
+   ```
+
+3. **Combining Both Approaches**:
+<!-- TODO: Double check on quotes around targets, and use of `name` as frontmatter key -->
+   ```yaml
+   ---
+   name: coding-standards
+   targets:
+     include: ["ide", "claude-code"]
+   cursor:
+     file: "cursor-coding-standards"
+   ---
+   ```
+
+**Precedence Rules**:
+
+- Target-specific keys override global values
+- If multiple target overrides could apply (e.g., a target is in multiple groups), explicit target overrides take precedence over group overrides
+- For conflicting include/exclude targets, explicit exclusions take precedence
+
+### Placeholder Instructions
+
+When writing prompts or instructions, it has become common practice to use placeholders as self-contained prompts to direct an AI to fill in. Placeholders typically take the form of bracketed or braced text, e.g. `[task description]` or `{short task summary}`. Mixdown supports this out of the box, and can work with either `[placeholder]` or `{placeholder}` syntax. These are distinguished from other Mixdown syntax by simply using single bracket or bracing characters.
+
+- ✅ Do this:
+    - `[placeholder text]`
+    - `{placeholder text}`
+- ❌ Don't do this:
+    - `[[placeholder text]]`
+    - `{{placeholder text}}`
+    - `<placeholder text>`
+
+> [!IMPORTANT]
+> Remember, placeholder values should be simply considered instructions for the AI, and the output may not always be exactly what you expect.
+
+#### Placeholder Formatting
+
+Since placeholders are basically just prompts, you can experiment with different things to try to coax out a specific output. Some ideas:
+
+- Markdown-formatting (these are generally pretty reliable):
+    - Bold: `**[placeholder text]**`
+    - Italics: `*[placeholder text]*`
+    - etc.
+- Pipe-delimited formatting:
+    - `[placeholder text|uppercase]`: "Instruction: placeholder text should be formatted in uppercase"
 
 ### Insertions
 
 | Type | Syntax | Notes |
 |------|--------|-------|
-| **Static (AI note)** | `[ fill this in ]` | Human or AI-fillable placeholder |
-| **Alias** | `{{ $name }}` | Alias lookup chain: front-matter → project → alias.yaml. |
-| **Data** | `{{ $.user.name }}` | Injects YAML data from `prompts/data/user.yaml`. |
+| **Alias** | `{{ $name }}` | Alias lookup chain: current file's front-matter → `prompts/data/alias.yaml`. |
+| **File Data** | `{{ $.[filename].key }}` | Injects YAML data from `prompts/data/[filename].yaml`. |
 | **Front-matter** | `{{ $.file.key }}` | Access current file's front-matter. |
-| **Internal Link** | `[Alias](file.md#section)` | Standard Markdown links. |
-| **Absolute Link** | `[Alias](//src/file.ts)` | Link to project files with `//` prefix. |
 
 **Built-in System Insertions**:
 
-- `{{ $target }}` → current target ID  
+- `{{ $target }}` → current target ID
 - `{{ $target.name }}` → display name from the provider manifest
 
 **Insertion Types:**
 
-- **Static Placeholder:** `[ fill this in ]`
-    - Used for human or AI fill-in. Not replaced by Mixdown.
-    - You may add attributes: `[ placeholder attr="value" ]`
-    - Spacing and word separation are flexible: `[ placeholder ]`, `[placeholder]`, `[separating-with-dashes]`.
-- **Dynamic Insertions:**
-    - **Alias:** `{{ $name }}` — Looks up alias in alias.yaml.
-    - **Data:** `{{ $.user.name }}` — Injects YAML data from `prompts/data/user.yaml`.
-    - **File Data:** `{{ $.file.key }}` or `{{ $.frontmatter.key }}` — Access current file's front-matter.
-    - **Internal Link:** Standard Markdown links: `[Core Rules](my-rule.md#core-rules)`
-    - **Link with Attributes:** `{{ /my-rule.md alias="Rules" key="value" }}` — Link with additional attributes.
-    - **Escaping:** Prefix with `\` to render as-is (e.g., `\{{ $alias }}`).
+- **Alias:** `{{ $name }}` — Looks up alias in current file's frontmatter or `prompts/data/alias.yaml`.
+- **Data:** `{{ $.user.name }}` — Injects YAML data from `prompts/data/user.yaml`.
+    - Other data files are also supported
+    - Defaults include `user.yaml`, `project.yaml`, and `org.yaml`
+    - You can also add your own data files to the `prompts/data` directory and reference them by their filename (excluding .yaml)
+- **Current File's Data:** `{{ $.file.key }}` or `{{ $.frontmatter.key }}` — Access current file's front-matter.
+- **Escaping:** Prefix with `\` to render as-is (e.g., `\{{ $alias }}`).
+
+**Caching and Performance:**
+
+- YAML file reads and JSON-pointer lookups are memoized and cached by file path + pointer for optimal performance.
+- Complex data structure lookups maintain good performance even with deeply nested data.
+
+**Undefined References:**
+
+- By default, undefined references emit a warning and render as `{{⚠ unresolved:path }}` in the output.
+- In strict mode (`--strict` flag), undefined references cause the build to fail.
+
+**Debugging:**
+
+- Use the `--debug` flag with the CLI to trace insertion resolution:
+
+  ```bash
+  mixdown build --debug
+  ```
+
+- Debug output includes JSON lines showing pointer paths and resolved values:
+
+  ```json
+  {"type":"insertion", "pointer":"$.user.name", "resolved":"Alice"}
+  ```
 
 **Examples:**
 
 ```markdown
 - Name: {{ $user.name }}
 - Email: {{ $.user.email }}
-- See: [Core Rules](my-rule.md#core-rules)
-- Link with attributes: {{ /my-rule.md alias="Core Rules" }}
 - Please fill out: [ your escalation steps ]
 ```
 
-### Embeds
+### Links
 
+| Type | Syntax | Notes |
+|------|--------|-------|
+| **Internal Link** | `[Alias](file.md#section)` | Standard Markdown links to other mix files. |
+| **Absolute Link** | `[Alias](//src/file.ts)` | Links to project files with `//` prefix. |
+| **Link Attributes** | `{{ /my-rule.md alias="Rules" key="value" }}` | Link with additional attributes. |
+
+**Link Examples:**
+
+```markdown
+- Link to internal section: [Core Rules](my-rule.md#core-rules)
+- Link to project file: [Source File](//src/main.ts)
+- Link with attributes: {{ /my-rule.md alias="Core Rules" }}
+```
+
+### Embeds
+<!-- TODO: Add in section embedding -->
 Embeds allow you to include reusable content, mixes, or templates inline.
 
 ```markdown
 <!-- Embed /prompts/partials/legal.md and suppress its heading -->
-{{> legal !heading}}
+{{> legal !heading }}
+
+<!-- Self-closing embed syntax -->
+{{> legal !heading /}}
 
 <!-- Embed as a section with attributes -->
-{{#> legal name="Legal Section"}}
+{{#> legal title="Legal Section" }}
+
+<!-- Self-closing section embed syntax -->
+{{#> legal title="Legal Section" /}}
 
 <!-- Embed /prompts/mixes/common-rules.md and include only section-1 and exclude section-2 -->
-{{> mix:common-rules sections="section-1,!section-2"}}
+{{> mix:common-rules sections="section-1,!section-2" }}
 
 <!-- Embed a specific section from the current mix -->
-{{> #section-name}}
+{{> #section-name }}
 
 <!-- Embed a template -->
-{{> template:my-template}}
+{{> template:my-template }}
 ```
 
 #### Embed Attributes
 
 | Attribute | Purpose |
 |-----------|---------|
-| `name="alternate-name"` | Rename embed on render; allows for flexibility in XML tag naming (replaces `as`). |
-| `!heading` | Suppress top heading of source (formerly `no-heading`). |
-| `!embeds` | Strip nested embeds inside source (formerly `no-mixins`). |
+| `as="alternate-name"` | Rename embed on render; allows for flexibility in XML tag naming. |
+| `!heading` | Suppress top heading of source. |
+| `!embeds` | Strip nested embeds inside source. |
 | `sections="section-1,!section-2"` | Filter specific sections. |
+
+#### Self-Closing Embed Tags
+
+Self-closing embed tags provide a more concise syntax when the embed doesn't have child content:
+
+```markdown
+{{> partial attribute="value" /}}
+```
+
+Key points about self-closing embed tags:
+
+- They work exactly like regular embed tags but use the trailing slash `/`
+- All attributes must appear before the closing slash
+- They have complete attribute handling parity with paired tags
+- They can be used with all embed types: partials, mixes, sections, and templates
+- Multi-line self-closing embeds are supported for readability
 
 #### Embed Advanced Usage
 
@@ -670,35 +809,63 @@ Embeds allow you to include reusable content, mixes, or templates inline.
 
 ```markdown
 <!-- Simple partial embed -->
-{{> legal !heading}}
+{{> legal !heading }}
 
 <!-- Embed as a section with attributes -->
 {{#> legal 
-  name="Legal Terms"
+  as="Legal Terms"
   !embeds
   sections="summary,steps"
 }}
 
 <!-- Embed a specific section from a mix -->
-{{> mix:incident-protocol#summary}}
+{{> mix:incident-protocol#summary }}
 ```
+
+### Whitespace Handling
+
+Mixdown has specific rules for whitespace to ensure consistent parsing and output:
+
+- **Tag Component Spacing**:
+    - A single space is required after the opening `{{#` or `{{>` in tag declarations
+    - Example: ✅ `{{# section }}` (correct), ❌ `{{#section}}` (incorrect)
+- **Using Titles for Sections without `title="value"`**:
+    - If you want, you can write just the desired title heading name in quotes: `{{# "Section Name" }}`
+    - This is a helpful shortcut, and is functionally equivalent to `{{# section-name title="Section Title" }}`
+- **Attribute Spacing**:
+    - Attributes must be separated by spaces or newlines
+    - No spaces are allowed around the `=` sign in attribute declarations
+    - Example: `title="value"` (correct), `title = "value"` (incorrect)
+- **Whitespace-Sensitive Areas**:
+    - Inside attribute values: `title="My Title"` preserves spaces exactly as written
+    - Between tag components: `{{# section }}` requires the space after `#`
+    - Indentation within section content: preserved exactly as written
+- **Whitespace Preservation**:
+    - Mixdown preserves all whitespace in section content
+    - Leading and trailing whitespace in tag declarations is ignored
+    - Multiline tag formatting is allowed and preserved for readability
+
+**Linting and Validation**:
+
+- The `mixdown lint` command can detect and warn about problematic whitespace cases
+- The `--fix` flag can automatically correct common whitespace issues: `mixdown lint --fix`
 
 ## Code Examples (Practical Snippets)
 
 ### Auto-Closing vs. Explicit Nesting
 
-Authoring:
+For simplicity, Mixdown auto-closes sections when they're proceeded by another section. This means you can write:
 
 ```markdown
-{{# example}}
+{{# example }}
 This is an examples section.
-{{# example}}
+{{# example }}
 This is an example *inside* the examples section.
-{{# example}}
+{{# example }}
 Another example inside the examples section.
 ```
 
-Rendered (auto-closed):
+And see the following rendered (auto-closed):
 
 ```markdown
 <example>
@@ -714,22 +881,22 @@ Another example inside the examples section.
 </example>
 ```
 
-Proper nesting with explicit closures:
+However, if you want to explicitly nest sections, you should do so with explicit closures:
 
 ```markdown
-{{# examples}}
+{{# examples }}
 Intro to examples.
-  {{# example}}First nested example.{{/example}}
-  {{# example}}Second nested example.{{/example}}
+  {{# example }}First nested example.{{/example}}
+  {{# example }}Second nested example.{{/example}}
 {{/examples}}
 ```
 
-Rendered:
+Which would be rendered as:
 
 ```markdown
 <examples>
 Intro to examples.
-  
+
   <example>First nested example.</example>
   <example>Second nested example.</example>
 </examples>
@@ -738,19 +905,19 @@ Intro to examples.
 ### Target-Filter Shortcuts
 
 ```markdown
-{{# instructions +@ide}}
+{{# instructions +ide }}
 Visible only in IDE targets like Cursor or Windsurf.
 {{/instructions}}
 
-{{# instructions -@ide}}
+{{# instructions -ide }}
 Hidden from IDEs; visible everywhere else.
 {{/instructions}}
 
-{{# instructions +@cli}}
+{{# instructions +cli }}
 Visible only in CLI targets (Aider, Claude Code).
 {{/instructions}}
 
-{{# instructions +cursor -*}}
+{{# instructions +cursor -* }}
 Only visible in Cursor, excluded from all other targets.
 {{/instructions}}
 ```
@@ -759,16 +926,15 @@ Only visible in Cursor, excluded from all other targets.
 
 ```markdown
 {{# rules
-  id="core-rules"
-  name="Core Coding Rules"
+  title="Core Coding Rules"
   export="+cursor"
-  include-attributes="name"
+  include-attributes="title"
 }}
 All commits *must* follow Conventional Commits.
 {{/rules}}
 ```
 
-- **Cursor** sees `core-rules.mdc` as a separate file.  
+- **Cursor** sees `core-rules.mdc` as a separate file.
 - **Roo Code** inlines the content with a `## Core Coding Rules` heading.
 
 ### Insertion Types in Action
@@ -789,45 +955,22 @@ Aliases resolve from `alias.yaml`, data is pulled from `prompts/data/user.yaml`,
 
 ```markdown
 {{> mix:incident-protocol
-  name="protocol"
+  as="protocol"
   !heading
   sections="summary,steps"
 }}
 ```
 
-This embeds the *summary* and *steps* sections from `incident-protocol.md`, suppresses its heading, and aliases the section name to `protocol` in the caller mix. 
+This embeds the *summary* and *steps* sections from `incident-protocol.md`, suppresses its heading, and aliases the section name to `protocol` in the caller mix.
 
 Alternatively, as a section with attributes:
 
 ```markdown
 {{#> mix:incident-protocol
-  name="Emergency Protocol"
+  as="Emergency Protocol"
   !heading
   sections="summary,steps"
 }}
-```
-
-### Front-Matter Migration Cheat-Sheet
-
-Old XML flavour ➜ new YAML flavour:
-
-```xml
-<mixdown version="0.1.0">
-<meta>
-name: legacy-rule
-</meta>
-<mix>...</mix>
-</mixdown>
-```
-
-becomes
-
-```yaml
----
-mixdown:
-  version: 0.1.0
-name: legacy-rule
----
 ```
 
 ## Directory Structure (Monorepo)
@@ -836,19 +979,20 @@ name: legacy-rule
 mixdown/
 ├── prompts/
 │   ├── artifacts/
-│   │   ├── builds/{id}/   # build-specific outputs
-│   │   └── latest/        # symlink to latest build
-│   ├── instructions/      # Mix files (*.md)
-│   ├── includes/          # reusable content & data
-│   └── templates/         # document templates
-├── .mixdown/              # compiler config, cache, reports
-├── packages/              # pnpm workspaces
-│   ├── core/              # core compiler
-│   ├── cli/               # Ink-based CLI
-│   ├── api/               # Express/MCP API
-│   ├── plugin-cursor/     # first-party provider
-│   └── plugin-claude-code/| first-party provider
-└── docs/                  # deep dives & spec
+│   │   ├── builds/{id}/    # build-specific outputs
+│   │   └── latest/         # symlink to latest build
+│   ├── instructions/       # Mix files (*.md)
+│   ├── partials/           # reusable content & data
+│   └── templates/          # document templates
+├── .mixdown/               # compiler config, cache, reports
+├── packages/               # pnpm workspaces
+│   ├── core/               # core compiler
+│   ├── cli/                # Ink-based CLI
+│   ├── api/                # Express/MCP API
+│   ├── plugin-cursor/      # Cursor target provider plugin
+│   ├── plugin-claude-code/ # Claude Code target provider plugin
+│   └── plugin-[target]/    # Other target provider plugins
+└── docs/                   # deep dives & spec
 ```
 
 ### Documentation
@@ -859,9 +1003,9 @@ mixdown/
 ├── cli.md                                # CLI reference
 ├── config.md                             # Mixdown configuration
 ├── glossary.md                           # Mixdown glossary of terms
-├── includes.md                           # includes reference
+├── partials.md                           # partials reference
 ├── mixes.md                              # mixes reference
-├── mixins.md                             # mixins reference
+├── embeds.md                              # embeds reference
 ├── quick-reference.md                    # quick reference guide
 ├── roadmap.md                            # Mixdown project roadmap
 ├── templates.md                          # templates reference
@@ -882,12 +1026,12 @@ mixdown/
 │   └── spec/                             # detailed technical specifications
 │       ├── attributes-spec.md            # attributes specification
 │       ├── config-schema.md              # configuration schema
-│       ├── includes-spec.md              # includes specification
+│       ├── partials-spec.md              # partials specification
 │       ├── linting-spec.md               # linting rules specification
 │       ├── mix-spec.md                   # mix specification
 │       ├── mixdown-syntax.md             # syntax reference
-│       ├── mixin-spec.md                 # mixin specification
-│       ├── placeholders-spec.md          # placeholders specification
+│       ├── embed-spec.md                 # embed specification
+│       ├── insertions-spec.md            # insertions specification
 │       ├── plugin-spec.md                # plugin specification
 │       ├── sections-spec.md              # sections specification
 │       ├── template-spec.md              # template specification
@@ -914,7 +1058,7 @@ flowchart LR
 
 ### Component Highlights
 
-1. **Core Compiler** – Parses, resolves placeholders & mixins, produces AST.
+1. **Core Compiler** – Parses, resolves placeholders & embeds, produces AST.
 2. **Plugin Providers** – Map AST → tool-specific markdown; declare directories & extensions.
 3. **CLI** – Ink UI with non-interactive flag support (`--json`).
 4. **API Server** – Express + OpenAPI validator; returns ZIP artifacts, MCP-compliant.
@@ -970,80 +1114,30 @@ See [`docs/contributing.md`](docs/contributing.md) for full guidelines.
 
 The following table provides a complete list of all supported attributes in Mixdown, their types, default values, and scope support:
 
-| Attribute | Type | Default | Section | Mixin | Front-matter | Description |
-|-----------|------|---------|---------|-------|--------------|-------------|
-| `id` | string | none | ✅ | ❌ | ❌ | Unique reference for sections |
-| `heading` | string | none | ✅ | ❌ | ❌ | Inject heading above section |
-| `description` | string | none | ✅ | ❌ | ✅ | Short description of content |
-| `filter` | list | none | ✅ | ❌ | ❌ | Include/exclude targets |
-| `export` | list | none | ✅ | ❌ | ❌ | Export as separate artifact |
-| `format` | enum | none | ✅ | ❌ | ❌ | Force specific content format |
-| `no-xml` | flag | true | ✅ | ❌ | ❌ | Skip XML wrapping |
-| `include-attributes` | list | none | ✅ | ❌ | ❌ | Whitelist attributes in rendered XML |
-| `remove-first-heading` | flag | true | ✅ | ❌ | ❌ | Strip first intra-section heading |
-| `as` | string | none | ❌ | ✅ | ❌ | Rename mixin section name on render for flexibility in XML tag naming. |
-| `no-heading` | flag | true | ❌ | ✅ | ❌ | Suppress top heading of source |
-| `no-mixins` | flag | true | ❌ | ✅ | ❌ | Strip nested mixins in source |
-| `include-frontmatter` | flag | false | ❌ | ✅ | ❌ | Bring source front-matter into caller |
-| `alias-from` | enum | "current" | ❌ | ✅ | ❌ | Alias resolution scope |
-| `sections` | list | none | ❌ | ✅ | ❌ | Filter specific sections |
-| `name` | string | none | ❌ | ❌ | ✅ | Mix identifier (required) |
-| `version` | string | none | ❌ | ❌ | ✅ | Mix version (required) |
-| `labels` | array | `[]` | ❌ | ❌ | ✅ | Categorization tags |
-| `targets` | array | `[]` | ❌ | ❌ | ✅ | Filter applicable targets |
-| `heading-level` | object | config | ❌ | ❌ | ✅ | Override heading settings |
+| Attribute            | Type    | Default    | Section | Embed | Front-matter | Description |
+|----------------------|---------|------------|---------|-------|--------------|-------------|
+| `name`               | string  | none       | ✅      | ✅    | ✅           | Name or identifier (front-matter: mix identifier, required) |
+| `title`              | string  | none       | ✅      | ❌    | ❌           | Title for the section which renders as a Markdown heading |
+| `description`        | string  | none       | ✅      | ❌    | ✅           | Short description of content |
+| `filter`             | list    | none       | ✅      | ❌    | ❌           | Include/exclude targets |
+| `export`             | list    | none       | ✅      | ❌    | ❌           | Export as separate artifact |
+| `format`             | enum    | none       | ✅      | ❌    | ❌           | Force specific content format |
+| `include-attributes` | list    | none       | ✅      | ❌    | ❌           | Whitelist attributes in rendered XML |
+| `as`                 | string  | none       | ❌      | ✅    | ❌           | Rename embed on render; allows for flexibility in XML tag naming |
+| `sections`           | list    | none       | ❌      | ✅    | ❌           | Filter specific sections |
+| `version`            | string  | none       | ❌      | ❌    | ✅           | Mix version (required) |
+| `labels`             | array   | `[]`       | ❌      | ❌    | ✅           | Categorization tags |
+| `targets`            | array   | `[]`       | ❌      | ❌    | ✅           | Filter applicable targets |
+| **Flags**            |         |            |         |       |              | **Boolean attributes (default true unless otherwise noted):** |
+| `!xml`               | flag    | true       | ✅      | ❌    | ❌           | Skip XML wrapping |
+| `remove-first-heading`| flag   | true       | ✅      | ❌    | ❌           | Strip first intra-section heading |
+| `!heading`           | flag    | true       | ❌      | ✅    | ❌           | Suppress top heading of source |
+| `!embeds`            | flag    | true       | ❌      | ✅    | ❌           | Strip nested embeds in source |
 
 **Notes:**
 
-- All attributes with string values can be scoped with target/group suffixes (e.g., `heading@cursor="Cursor-specific heading"`)
+- All attributes with string values can be scoped with target/group suffixes (e.g., `heading+cursor="Cursor-specific heading"`)
 - Flag attributes default to `true` when specified without a value
 - Target-specific front-matter keys override global values (e.g., `cursor: { description: "..." }`)
-
-### Legacy Format
-
-The previous Mixdown syntax has been deprecated.
-
-#### Why This Change?
-
-The original Mixdown syntax mixed custom XML with Markdown, which:
-
-- Violated markdown-lint rules and rendered poorly in tooling.
-- Introduced a steep learning curve for newcomers.
-- Complicated provider parsing and plugin development.
-
-The new **CommonMark-only** approach uses braces (`{{section}}`) so every file is valid Markdown, previewable anywhere, and trivially linted.
-
-#### At-a-Glance Changes
-
-| Old Concept | New Concept | Rationale |
-|-------------|-------------|-----------|
-| `<section>` XML tags | `{{section}}` braces | Keeps Markdown valid & removes mixed markup. |
-| `<meta>` block | Standard YAML front-matter | Aligns with ecosystem norms (Jekyll, MDX). |
-| `$[link:example]`, `$[alias:name]` | `{>file}`, `{@name}` | Unified placeholder syntax. |
-| `$[include]` / `mix` / `template` | `{{$include}}` mixins | Single mental model for includes. |
-| `tool=` attr | `target=` attr | Clarifies these refer to build targets. |
-
-#### Front-Matter Migration Cheat-Sheet
-
-Old XML flavour ➜ new YAML flavour:
-
-```xml
-<mixdown version="0.1.0">
-<meta>
-name: legacy-rule
-</meta>
-<mix>...</mix>
-</mixdown>
-```
-
-becomes
-
-```yaml
----
-mixdown:
-  version: 0.1.0
-name: legacy-rule
----
-```
 
 *© 2025 Mixdown contributors – MIT License.*

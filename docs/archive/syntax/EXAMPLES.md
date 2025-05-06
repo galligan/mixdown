@@ -1,5 +1,8 @@
 # Mixdown Syntax Examples
 
+> [!WARNING]
+> This document is deprecated. See the latest version at [README.md](./README.md).
+
 ## Example 1: Minimal Prompt
 
 In this example, we don't even use the `<prompt>` wrapper, for a more free-form prompt. It's important to note though that this wouldn't be valid XML, so you might still save it in a file with a `<prompt>` wrapper.

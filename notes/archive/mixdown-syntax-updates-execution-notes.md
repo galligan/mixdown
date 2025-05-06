@@ -22,47 +22,47 @@
 
 ### Update Section Tag Syntax with `#` Prefix
 
-- [ ] Design and document comprehensive guidelines for the new section syntax.
+- [x] Design and document comprehensive guidelines for the new section syntax.
 - [ ] Update IDE plugins & syntax highlighting schemas to recognize `{{# section}}` prefix.
 - [ ] Implement logging and error handling for malformed section tags (e.g., missing space after `#`).
 
 ### Update Inclusion/Exclusion Notation (`+target -target`)
 
-- [ ] Implement validation for conflicting patterns (e.g., `+cursor -cursor` → warning / strict-mode error).
-- [ ] Document precedence rules when a target exists in multiple groups with conflicting filters.
-- [ ] Confirm no escaping rules are required; clarify allowed character set for target IDs.
+- [x] Implement validation for conflicting patterns (e.g., `+cursor -cursor` → warning / strict-mode error).
+- [x] Document precedence rules when a target exists in multiple groups with conflicting filters.
+- [x] Confirm no escaping rules are required; clarify allowed character set for target IDs.
 
 ### Update Insertions System (`{{ $alias }}` / `{{ $.data.key }}`)
 
-- [ ] Evaluate and, if beneficial, design caching strategy for complex data lookups.
-- [ ] Define behavior for undefined references (warn vs error, strict mode behavior) and document.
-- [ ] Specify debugging workflow for tracing data reference resolution (e.g., CLI `--debug` flag).
+- [x] Evaluate and, if beneficial, design caching strategy for complex data lookups.
+- [x] Define behavior for undefined references (warn vs error, strict mode behavior) and document.
+- [x] Specify debugging workflow for tracing data reference resolution (e.g., CLI `--debug` flag).
 
 ### Update Internal Links
 
-- [ ] Implement compiler link validation; emit warnings or strict errors for unresolved links.
-- [ ] Ensure cross-mix link resolution logic is defined and documented.
-- [ ] Describe transformation rules for links targeting exported sections per target provider.
+- [x] Implement compiler link validation; emit warnings or strict errors for unresolved links.
+- [x] Ensure cross-mix link resolution logic is defined and documented.
+- [x] Describe transformation rules for links targeting exported sections per target provider.
 
 ### Update Terminology Consistency
 
-- [ ] Audit docs for consistent use of "embed" (verb) vs "Embed" (noun) and fix discrepancies.
-- [ ] Clarify and document distinction between "name" (identifier) vs "heading" (rendered heading level).
+- [x] Audit docs for consistent use of "embed" (verb) vs "Embed" (noun) and fix discrepancies.
+- [x] Clarify and document distinction between "name" (identifier) vs "heading" (rendered heading level).
 
 ### Update Self-Closing Tags
 
-- [ ] Explicitly document self-closing embed syntax (`{{> partial /}}`), include examples.
-- [ ] Confirm attribute handling parity between self-closing and paired tags; update spec.
+- [x] Explicitly document self-closing embed syntax (`{{> partial /}}`), include examples.
+- [x] Confirm attribute handling parity between self-closing and paired tags; update spec.
 
 ### Update Whitespace Handling
 
-- [ ] Specify whitespace requirements between tag components and around attribute values.
-- [ ] Add linter rules or parser warnings for problematic whitespace cases.
+- [x] Specify whitespace requirements between tag components and around attribute values.
+- [x] Add linter rules or parser warnings for problematic whitespace cases.
 
 ### Update Target-Specific Front Matter
 
-- [ ] Define front-matter keys (`include`, `exclude`) for target scoping; add examples.
-- [ ] Clarify that `+/-` shorthand does not apply in front-matter; update docs accordingly.
+- [x] Define front-matter keys (`include`, `exclude`) for target scoping; add examples.
+- [x] Clarify that `+/-` shorthand does not apply in front-matter; update docs accordingly.
 
 ### Update Additional Documentation
 
@@ -197,7 +197,7 @@ Brief bullets here (see matrix) – each will have its own design doc when prior
 
 - [ ] All tasks in Task Matrix have assignees and GitHub issues.
 - [ ] CI passes snapshot & new unit tests.
-- [ ] Spec docs updated and redeployed.
+- [x] Spec docs updated and redeployed.
 - [ ] Demo compile run with `--debug` showcases new features.
 
 ---

@@ -1,5 +1,8 @@
 # Mixdown Markup Specification for AI/Agentic Prompting
 
+> [!WARNING]
+> This document is deprecated. See the latest version at [README.md](./README.md).
+
 The Mixdown syntax is a multi-syntax markup specification (for lack of a better term) designed for more effective and consistent AI prompting. It is designed to be:
 
 - 🙃 Flexible and forgiving

@@ -82,7 +82,7 @@ The string that immediately follows the `#` sigil and space would be the name of
     - `no-heading` -> `!heading` (to suppress the top heading of the embedded content)
     - `{{# section-name heading !wrap }}` -> Includes the `section-name` as a heading 
     - `heading?h2="Rules"` -> `name heading?h2="Rules"` (to set the heading level of the embedded content)
-        - `heading?h[+|-]` -> `name heading:h[+|-]` (to increment or decrement the heading level of the embedded content)
+        - `heading?h[+|-]` -> `name heading:[increment|decrement]` (to increment or decrement the heading level of the embedded content)
         - `heading?replace="Rules"` -> `name heading:replace="Rules"` (to replace the heading of the embedded content with the value of `heading`)
 
 ## Embeds (fka Mixins)

@@ -1,5 +1,8 @@
 # Mixdown Syntax Changelog
 
+> [!WARNING]
+> This document is deprecated. See the latest version at [README.md](./README.md).
+
 ## `0.1.x`
 
 ### `0.1.1` (2025-03-25)
