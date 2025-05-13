@@ -36,7 +36,7 @@
   - [Remixes](#remixes)
     - [Remix Attributes](#remix-attributes)
   - [Remixes vs. Inclusions](#remixes-vs-inclusions)
-  - [Samples](#samples)
+  - [Stems](#stems)
   - [Rendering Raw Mixdown Syntax](#rendering-raw-mixdown-syntax)
   - [Instruction Placeholders](#instruction-placeholders)
     - [Placeholder Formatting](#placeholder-formatting)
@@ -64,8 +64,8 @@ Mixdown is a **CommonMark-compliant prompt compiler** that lets you author a sin
 Mixdown introduces a single source-of-truth rules syntax written in pure Markdown (with a dash of specialized syntax), which is processed into tool-specific files by a compiler that:
 
 1. Parses the mix into an AST (abstract syntax tree) to ensure a consistent format.
-2. Uses **tool-specific compilers** (as plugins) to transform the AST into per-tool rules files (artifacts).
-3. Writes per-tool **artifacts** to their respective locations, with the necessary filenames, formats, etc. all accounted for.
+2. Uses **tool-specific compilers** (as plugins) to transform the AST into per-tool rules files (records).
+3. Writes per-tool **records** to their respective locations, with the necessary filenames, formats, etc. all accounted for.
 
 Result: *Write prompts once, render tool-specific rules, zero drift.*
 
@@ -80,7 +80,7 @@ Result: *Write prompts once, render tool-specific rules, zero drift.*
   - A supported tool, such as `cursor`, `windsurf`, or `claude-code`.
   - Defines tool-specific criteria for compiling mixes to rules files.
   - Provided through plugins.
-- **Artifact**
+- **Record**
   - Target-specific (tool) output files, rendered from the source mix.
   - Examples for a mix called `project-conventions.md`:
     - Cursor → `.cursor/rules/project-conventions.mdc`
@@ -97,7 +97,7 @@ Result: *Write prompts once, render tool-specific rules, zero drift.*
     - `{{instructions}}` → `<instructions>`
 - **Remix**
   - Syntax: `{{> my-rule }}`
-  - Embed content from another mix, section, sample, or template.
+  - Embed content from another mix, section, stem, or template.
 - **Insertion**
   - Syntax: `{{$key}}` or `$key` if used within a `{{...}}` tag.
   - Dynamic values replaced inline at build time.
@@ -146,7 +146,7 @@ mixdown init      # scaffolds .mixdown/ directory structure
 
 mixdown import    # imports existing rules files into the mixdown format
 
-mixdown build     # writes artifacts to .mixdown/artifacts/
+mixdown build     # writes records to .mixdown/records/
 ```
 
 ## Syntax Reference
@@ -172,13 +172,13 @@ Sections are the core building block of Mixdown and are a direct stand in for XM
 
 #### Section Tags Syntax
 
-- **1:1 Markdown-to-XML Translation**: Write sections as `{{section-name}}` and they will render as `<section_name>` in the output.
+- **1:1 Markdown-to-XML Translation**: Write sections as `{{section-name}}` and they will be converted to `<section_name>` in the output.
 - **Open/Close** `{{section-name ... }}` [ section content ] `{{/section-name}}`
 
 #### Section Tag Names
 
 - `kebab-case` is recommended for section names (to avoid accidental Markdown emphasis rendering)
-- Regardless of the naming convention, XML tag names in artifacts will render as `<snake_case>` (which is configurable)
+- Regardless of the naming convention, XML tag names in records will be formatted as `<snake_case>` (which is configurable)
 
 #### Section Tag Parsing
 
@@ -194,7 +194,7 @@ Content B
 
 ---
 
-Renders for all configured tools (except `claude-code` in this example) as:
+Output for all configured tools (except `claude-code` in this example):
 <!-- XML output -->
 <section-one>
 Content A
@@ -204,7 +204,7 @@ Content B
 </section-two>
 ```
 
-While Claude Code will render as:
+While Claude Code output will be:
 
 ```markdown
 <section-one>
@@ -244,7 +244,7 @@ This is the content of the instructions section.
 
 ---
 
-Output renders as:
+Output:
 <instructions
   name="important_rules">
   This is the content of the instructions section.
@@ -262,7 +262,7 @@ Output renders as:
 
 #### Rendered Content
 
-The `rendered` attribute provides flexible control over how content is processed and displayed in the final output. This attribute is available for sections, remixes, and inclusions.
+The `rendered` attribute provides flexible control over how content is formatted in the final output. This attribute is available for sections, remixes, and inclusions.
 
 ```markdown
 {{instructions rendered="unwrapped"}}
@@ -271,7 +271,7 @@ Content without surrounding XML tags
 
 {{> conventions#style-guide rendered="inline"}}
 
-{{> @sample rendered="code:javascript"}}
+{{> @code-example rendered="code:javascript"}}
 ```
 
 **Rendered Attribute Values:**
@@ -280,7 +280,7 @@ Content without surrounding XML tags
 |-------|-------------|
 | `default` | Normal rendering with XML tags (default behavior) |
 | `unwrapped` | No XML tags (equivalent to former `no-tag=true`) |
-| `inline` | Content rendered inline (preserves formatting otherwise) useful with [samples](#samples) |
+| `inline` | Content rendered inline (preserves formatting otherwise) useful with [stems](#stems) |
 | `raw` | Render everything as raw Mixdown syntax |
 | `raw:content` | Only render content as raw, process tags normally |
 | `raw:tags` | Only render tags as raw, process content normally |
@@ -306,21 +306,21 @@ function hello() {
 {{/section}}
 ```
 
-When used with samples, if the language is omitted (`rendered="code"`), the system will automatically determine the language based on the sample file's extension:
+When used with stems, if the language is omitted (`rendered="code"`), the system will automatically determine the language based on the stem file's extension:
 
 ```markdown
 {{> @my-script.js rendered="code"}}
-<!-- Will render as JavaScript code block -->
+<!-- Will output as JavaScript code block -->
 
 {{> @styles.css rendered="code"}}
-<!-- Will render as CSS code block -->
+<!-- Will output as CSS code block -->
 ```
 
 If the file extension is not recognized (and isn't a `.md` file), it will default to `txt`. Explicitly specifying a language will always override the automatic detection:
 
 ```markdown
 {{> @config.json rendered="code:yaml"}}
-<!-- Will render as YAML code block despite being a JSON file -->
+<!-- Will output as YAML code block despite being a JSON file -->
 ```
 
 #### Using bare XML tags
@@ -328,7 +328,7 @@ If the file extension is not recognized (and isn't a `.md` file), it will defaul
 > [!WARNING]
 > Bare XML tags are not valid Markdown, so Markdown previewers may be likely to render them differently or not at all.
 
-When `allow-bare-xml-tags` is set to `true` in frontmatter or `.mixdown.config.json`, you can use bare XML tags for section names. The artifacts will be rendered verbatim, but note:
+When `allow-bare-xml-tags` is set to `true` in frontmatter or `.mixdown.config.json`, you can use bare XML tags for section names. The records will be rendered verbatim, but note:
 
 ```markdown
 <!-- XML tags with `allow-bare-xml-tags` set to `true` -->
@@ -357,7 +357,7 @@ target:
   include: ["cursor", "windsurf"]
   exclude: ["claude-code"]
   path: "./custom/output/path"
-# Provide target-specific frontmatter which is included in their respective artifacts:
+# Provide target-specific frontmatter which is included in their respective records:
 cursor:
   alwaysApply: false
   target:
@@ -381,7 +381,7 @@ Frontmatter is used to provide metadata about the mix file and control how it's 
 - `globs`: Optional globs to be rewritten based on target-specific needs
 - `target`: Control how this mix is processed for targets
   - `include`/`exclude`: Control which targets receive this mix
-  - `path`: Specify a custom output path for artifacts
+  - `path`: Specify a custom output path for records
   - Options include any target providers registered in `.mixdown.config.json`
 - `version`: Version information
 - `labels`: Categorization tags
@@ -414,7 +414,7 @@ Linking to project files is done with with the link tag and a relative path to t
 ```markdown
 {{link ["Link Title"] /path/to/file.ts}}
 
-The above will render as a link relative to the compiled artifact's directory. For example, if the compiled artifact is written to `.cursor/rules/project-conventions.mdc`, the link will be rendered as:
+The above will render as a link relative to the compiled record's directory. For example, if the compiled record is written to `.cursor/rules/project-conventions.mdc`, the link will be rendered as:
 
 [Link Title](../../path/to/file/.ts)
 ```
@@ -436,10 +436,10 @@ Insertions are dynamic values using the `{{$...}}` syntax. They are replaced inl
 
 ### Remixes
 
-Remixes allow you to reuse content across multiple mixes by embedding mixes, sections within a mix, or samples into rendered artifacts. They are denoted by the `{{> ...}}` syntax.
+Remixes allow you to reuse content across multiple mixes by embedding mixes, sections within a mix, or stems into rendered records. They are denoted by the `{{> ...}}` syntax.
 
 ```markdown
-<!-- Embeds `/_samples/legal.md` -->
+<!-- Embeds `/_stems/legal.md` -->
 {{> @legal}}
 
 <!-- Embed a specific section from the `conventions.md` mix file -->
@@ -481,7 +481,7 @@ All [section attributes](#section-attributes) can be applied to remixes. Remixes
 - `rendered` can provide some flexibility for how remixes will be rendered
   - `rendered="unwrapped"` will remove the surrounding tag from the output.
   - `rendered="inline"` will attempt to render the content inline.
-  - `rendered="code"` will render the content as a code block. When used with samples, the language will be derived from the sample file's extension.
+  - `rendered="code"` will format the content as a code block. When used with stems, the language will be derived from the stem file's extension.
 
 Examples:
 
@@ -504,16 +504,16 @@ While they may seem similar, remixes and inclusions have different use cases and
 - **Remixes** `{{> ...}}` **will** render the surrounding tag in the final output.
 - **Inclusions** `{{$...}}` are replaced outright and **will not** render the surrounding tag in the final output.
 
-### Samples
+### Stems
 
-Samples are reusable content, stored in the `/_samples` directory. They can be written in Mixdown syntax, Markdown, or other formats and are intended for use directly within mixes.
+Stems are modular, reusable content components, stored in the `/_stems` directory. Like audio production stems that provide isolated tracks, Mixdown stems provide isolated content blocks that can be mixed into multiple instruction files.
 
-- Samples will render as wrapped with `<sample-name>` tags in the final output. This can be disabled by using the `rendered="unwrapped"` attribute.
+- Stems are converted to `<stem_name>` tags in the final output. This can be disabled using the `rendered="unwrapped"` attribute.
 
 Example:
 
 ```markdown
-<!-- Sample: `/_samples/remember.md` -->
+<!-- Stem: `/_stems/remember.md` -->
 1. Always follow the code conventions.
 2. Never commit directly to `main`
 3. Use conventional commit messages.
@@ -529,7 +529,7 @@ Example:
 
 ---
 
-<!-- Rendered output: `.cursor/rules/my-rules.mdc` -->
+<!-- Output: `.cursor/rules/my-rules.mdc` -->
 
 # My Rules
 
@@ -627,7 +627,7 @@ All code must follow consistent formatting.
 Testing is required for all new features.
 {{/instructions}}
 
-Will render in Cursor (but not Windsurf) as:
+Output in Cursor (but not Windsurf):
 
 <instructions name="core_rules">
 All code must follow consistent formatting.
@@ -664,10 +664,10 @@ To include a section in Mixdown use: {{section-name}}
 ```text
 project/
 ├── .mixdown/
-│   ├── artifacts/
+│   ├── records/
 │   │   └── builds/         # compiled outputs
 │   ├── instructions/       # Mix files (*.md)
-│   │   └── _samples/       # reusable content
+│   │   └── _stems/         # reusable content modules
 │   └── mixdown.config.json # compiler config
 ```
 
@@ -700,7 +700,7 @@ The following table provides a complete list of all supported attributes in Mixd
 | `labels`             | array   | `[]`       | ❌      | ❌    | ✅           | Categorization tags |
 | `target.include`     | array   | `[]`       | ❌      | ❌    | ✅           | Target inclusion list |
 | `target.exclude`     | array   | `[]`       | ❌      | ❌    | ✅           | Target exclusion list |
-| `target.path`        | string  | none       | ❌      | ❌    | ✅           | Custom output path for artifacts |
+| `target.path`        | string  | none       | ❌      | ❌    | ✅           | Custom output path for records |
 | `globs`              | array   | `[]`       | ❌      | ❌    | ✅           | File patterns for tool-specific support (frontmatter only) |
 | `alwaysApply`        | boolean | false      | ❌      | ❌    | ✅           | Whether rule should always be applied (frontmatter only) |
 | `\key`               | flag    | none       | ✅      | ✅    | ❌           | Include attribute in rendered XML |
