@@ -140,7 +140,7 @@ mixdown build         # writes artifacts to .mixdown/artifacts/
 Sections are the core building block of Mixdown and are a direct stand in for XML `<section>` tags. They are used to create reusable content blocks that provide clarity for agents, and can be included in other sections or mixes.
 
 ```markdown
-{{instructions title="Critical Instructions" +cursor -claude-code}}
+{{instructions description="Critical Instructions" +cursor -claude-code}}
 - IMPORTANT: You must follow these coding standards...
 {{/instructions}}
 ```
@@ -155,8 +155,7 @@ Sections are the core building block of Mixdown and are a direct stand in for XM
 
 ```markdown
 {{instructions
-  title="Rules & Instructions"
-  description="Section description."
+  description="Critical instructions for all agents."
 }}
 ```
 
@@ -197,12 +196,12 @@ Content A
 Any string attribute can be given a per-target override by suffixing the target ID with a **`?`** delimiter:
 
 ```markdown
-{{instructions title="Important Rules" cursor?title="ImportantCursor Rules"}}
+{{instructions description="Important Rules" cursor?description="Important Cursor Rules"}}
 ...
 {{/instructions}}
 ```
 
-In this example the section title is "Important Cursor Rules" when compiled for the *cursor* target, and "Important Rules" everywhere else.  The same pattern works with groups once they arrive (e.g. `ide?title="Important IDE Rules"`).
+In this example the section description is "Important Cursor Rules" when compiled for the *cursor* target, and "Important Rules" everywhere else.  The same pattern works with groups once they arrive (e.g. `ide?description="Important IDE Rules"`).
 
 Note: You can also use the `+target` syntax to both include the section for specific targets *and* apply target-specific overrides.
 
@@ -213,7 +212,7 @@ Attributes can be split across lines for readability. The parser preserves this 
 ```markdown
 <!-- Multi-line section tag in Mixdown format -->
 {{instructions
-  title="Rules"
+  description="Rules"
   \description="These are the rules for the instructions section."
 }}
 This is the content of the instructions section.
@@ -235,7 +234,6 @@ Renders as:
 
 | Attribute | Type | Purpose |
 |-----------|------|---------|
-| `title` | string | Primary name/title for the section. |
 | `description` | string | Short blurb retained in rendered XML (if allowed). |
 | `+/-target` | flag | Include/exclude for specific targets (e.g., `+cursor -windsurf`). |
 | `no-tag` | boolean | Skip XML wrapping. |
@@ -409,7 +407,7 @@ Mixdown has specific rules for whitespace to ensure consistent parsing and outpu
 **Section with attributes:**
 
 ```markdown
-{{instructions \title="Core Rules" +cursor -windsurf}}
+{{instructions \description="Core Rules" +cursor -windsurf}}
 All code must follow consistent formatting.
 
 Testing is required for all new features.
@@ -455,14 +453,12 @@ project/
 
 Features planned for v0.x releases:
 
-- Self-closing section tags (`{{section-name ... /}}`)
+- Self-closing section tags
 - Target groups for easier filtering of multiple targets
 - Template support with placeholder filling
 - Mode support for tools like Roo Code
 - Slash command support for Claude Code
 - Strict mode for validation
-- Data insertions with YAML data files
-- Advanced title/heading handling with modifiers
 
 ## Appendix
 
@@ -473,7 +469,6 @@ The following table provides a complete list of all supported attributes in Mixd
 | Attribute            | Type    | Default    | Section | Remix | Frontmatter | Description |
 |----------------------|---------|------------|---------|-------|--------------|-------------|
 | `name`               | string  | none       | ✅      | ✅    | ✅           | Name or identifier (frontmatter: mix identifier, required) |
-| `title`              | string  | none       | ✅      | ❌    | ❌           | Title for the section |
 | `description`        | string  | none       | ✅      | ❌    | ✅           | Short description of content |
 | `+/-target`          | flag    | none       | ✅      | ✅    | ❌           | Include/exclude for specific targets |
 | `no-tag`             | boolean | false      | ✅      | ✅    | ❌           | Skip XML tag wrapping |
