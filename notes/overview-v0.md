@@ -26,6 +26,7 @@
     - [Target-scoped attribute overrides](#target-scoped-attribute-overrides)
     - [Multi-line Tags for Readability](#multi-line-tags-for-readability)
     - [Section Attributes](#section-attributes)
+    - [Rendered Content](#rendered-content)
     - [Using bare XML tags](#using-bare-xml-tags)
   - [Mixdown Frontmatter](#mixdown-frontmatter)
   - [Links](#links)
@@ -35,6 +36,7 @@
   - [Remixes](#remixes)
     - [Remix Attributes](#remix-attributes)
   - [Remixes vs. Inclusions](#remixes-vs-inclusions)
+  - [Samples](#samples)
   - [Rendering Raw Mixdown Syntax](#rendering-raw-mixdown-syntax)
   - [Instruction Placeholders](#instruction-placeholders)
     - [Placeholder Formatting](#placeholder-formatting)
@@ -95,7 +97,7 @@ Result: *Write prompts once, render tool-specific rules, zero drift.*
     - `{{instructions}}` → `<instructions>`
 - **Remix**
   - Syntax: `{{> my-rule }}`
-  - Embed content from another mix, section, partial, or template.
+  - Embed content from another mix, section, sample, or template.
 - **Insertion**
   - Syntax: `{{$key}}` or `$key` if used within a `{{...}}` tag.
   - Dynamic values replaced inline at build time.
@@ -163,7 +165,7 @@ mixdown build     # writes artifacts to .mixdown/artifacts/
 Sections are the core building block of Mixdown and are a direct stand in for XML `<section>` tags. They are used to create reusable content blocks that provide clarity for agents, and can be included in other sections or mixes.
 
 ```markdown
-{{instructions description="Critical Instructions" +cursor -claude-code}}
+{{instructions +cursor -claude-code}}
 - IMPORTANT: You must follow these coding standards...
 {{/instructions}}
 ```
@@ -215,12 +217,12 @@ Content A
 Any string attribute can be given a per-target override by suffixing the target ID with a **`?`** delimiter:
 
 ```markdown
-{{instructions description="Important Rules" cursor?description="Important Cursor Rules"}}
+{{instructions cursor?name="cursor_instructions"}}
 ...
 {{/instructions}}
 ```
 
-In this example the section description is "Important Cursor Rules" when compiled for the *cursor* target, and "Important Rules" everywhere else.  The same pattern works with groups once they arrive (e.g. `ide?description="Important IDE Rules"`).
+In this example the section will use the name "cursor_instructions" when compiled for the *cursor* target. The same pattern works with groups once they arrive (e.g. `ide?name="ide_instructions"`).
 
 Note: You can also use the `+target` syntax to both include the section for specific targets *and* apply target-specific overrides.
 
@@ -232,8 +234,7 @@ Attributes can be split across lines for readability. The parser preserves this 
 <!-- Multi-line section tag in Mixdown format -->
 
 {{instructions
-  description="Rules"
-  \description="These are the rules for the instructions section."
+  \name="important_rules"
 }}
 This is the content of the instructions section.
 {{/instructions}}
@@ -245,7 +246,7 @@ This is the content of the instructions section.
 
 Output renders as:
 <instructions
-  description="These are the rules for the instructions section.">
+  name="important_rules">
   This is the content of the instructions section.
 </instructions>
 ```
@@ -254,13 +255,73 @@ Output renders as:
 
 | Attribute | Type | Purpose |
 |-----------|------|---------|
-| `description` | string | Short blurb retained in rendered XML (if allowed). |
 | `+/-target` | flag | Include/exclude for specific targets (e.g., `+cursor -windsurf`). |
-| `no-tag` | boolean | Skip XML wrapping. |
 | `\key` | flag | Include the attribute in rendered XML. |
-| `globs` | list | File glob patterns the rule should match (rewritten per-target when needed). |
-| `alwaysApply` | boolean | Force the rule to apply even when the current file does not match `globs`. |
+| `rendered` | string | Controls how content is processed and displayed (see [Rendered Content](#rendered-content) below). |
 | *Custom* | any | Passed through untouched. |
+
+#### Rendered Content
+
+The `rendered` attribute provides flexible control over how content is processed and displayed in the final output. This attribute is available for sections, remixes, and inclusions.
+
+```markdown
+{{instructions rendered="unwrapped"}}
+Content without surrounding XML tags
+{{/instructions}}
+
+{{> conventions#style-guide rendered="inline"}}
+
+{{> @sample rendered="code:javascript"}}
+```
+
+**Rendered Attribute Values:**
+
+| Value | Description |
+|-------|-------------|
+| `default` | Normal rendering with XML tags (default behavior) |
+| `unwrapped` | No XML tags (equivalent to former `no-tag=true`) |
+| `inline` | Content rendered inline (preserves formatting otherwise) useful with [samples](#samples) |
+| `raw` | Render everything as raw Mixdown syntax |
+| `raw:content` | Only render content as raw, process tags normally |
+| `raw:tags` | Only render tags as raw, process content normally |
+| `code[:language]` | Render content as a code block in the specified language |
+
+Multiple values can be combined with commas where compatible:
+
+```markdown
+{{instructions rendered="unwrapped,inline"}}
+This content will appear without tags and inline
+{{/instructions}}
+```
+
+**Rendering as Code Blocks:**
+
+The `code[:language]` value renders content as a code block in the specified language. For example:
+
+```markdown
+{{section rendered="code:javascript"}}
+function hello() {
+  console.log("Hello, world!");
+}
+{{/section}}
+```
+
+When used with samples, if the language is omitted (`rendered="code"`), the system will automatically determine the language based on the sample file's extension:
+
+```markdown
+{{> @my-script.js rendered="code"}}
+<!-- Will render as JavaScript code block -->
+
+{{> @styles.css rendered="code"}}
+<!-- Will render as CSS code block -->
+```
+
+If the file extension is not recognized (and isn't a `.md` file), it will default to `txt`. Explicitly specifying a language will always override the automatic detection:
+
+```markdown
+{{> @config.json rendered="code:yaml"}}
+<!-- Will render as YAML code block despite being a JSON file -->
+```
 
 #### Using bare XML tags
 
@@ -295,9 +356,12 @@ globs: ["**/*.{txt,md,mdc}"] # optional, globs re-written based on target-specif
 target:
   include: ["cursor", "windsurf"]
   exclude: ["claude-code"]
+  path: "./custom/output/path"
 # Provide target-specific frontmatter which is included in their respective artifacts:
 cursor:
   alwaysApply: false
+  target:
+    path: "./custom/.cursor/rules"
 windsurf:
   trigger: globs
 # Add additional metadata to the mix:
@@ -315,11 +379,14 @@ Frontmatter is used to provide metadata about the mix file and control how it's 
 - `name`: Unique identifier for the mix (optional, defaults to filename)
 - `description`: Optional description of the mix, rendered for tools that use them (e.g. Cursor, Windsurf, etc.)
 - `globs`: Optional globs to be rewritten based on target-specific needs
-- `target`: Control which targets receive this mix
+- `target`: Control how this mix is processed for targets
+  - `include`/`exclude`: Control which targets receive this mix
+  - `path`: Specify a custom output path for artifacts
   - Options include any target providers registered in `.mixdown.config.json`
 - `version`: Version information
 - `labels`: Categorization tags
 - `[cursor|windsurf|claude-code|...]`: Target-specific key/value pairs
+  - Can include `target.path` to override the global path for specific targets
 
 ### Links
 
@@ -360,7 +427,7 @@ Insertions are dynamic values using the `{{$...}}` syntax. They are replaced inl
 |------|--------|-------|
 | **Alias** | `{{$key}}` | Alias lookup in `.mixdown.config.json` under `aliases` key. |
 | **Frontmatter value** | `{{$.key}}` | Access values from thecurrent file's frontmatter. |
-| **Target** | `{{$target}}` or `{{$target.id}}` | Display name from the provider manifest (e.g. `Cursor`, `Claude Code`). The current target ID in kebab-case can be accessed by adding `.id` to the end (`cursor`, `claude-code`). |
+| **Target** | `{{$target}}` or `{{$target.id}}` | Display name from the provider manifest (e.g. `Cursor`, `Claude Code`). The current target ID in kebab-case can be accessed by adding `.id` to the end (`cursor`, `claude-code`, etc.) |
 
 **Built-in System Insertions**:
 
@@ -369,11 +436,11 @@ Insertions are dynamic values using the `{{$...}}` syntax. They are replaced inl
 
 ### Remixes
 
-Remixes allow you to reuse content across multiple mixes by embedding partials, mixes, or sections within a mix into rendered artifacts. They are denoted by the `{{> ...}}` syntax.
+Remixes allow you to reuse content across multiple mixes by embedding mixes, sections within a mix, or samples into rendered artifacts. They are denoted by the `{{> ...}}` syntax.
 
 ```markdown
-<!-- Embed /_partials/legal.md -->
-{{> _legal}} or {{> _partials/legal}}
+<!-- Embeds `/_samples/legal.md` -->
+{{> @legal}}
 
 <!-- Embed a specific section from the `conventions.md` mix file -->
 {{> conventions#section-name}}
@@ -408,7 +475,13 @@ Important: Be sure to follow the style guide:
 
 #### Remix Attributes
 
-All [section attributes](#section-attributes) can be applied to remixes. An additional `sections` attribute is available to filter specific sections by name and include/exclude them on render.
+All [section attributes](#section-attributes) can be applied to remixes. Remixes also support the following additional attributes:
+
+- `sections="included,!excluded"` allows you to filter which sections from the mix are included/excluded on render.
+- `rendered` can provide some flexibility for how remixes will be rendered
+  - `rendered="unwrapped"` will remove the surrounding tag from the output.
+  - `rendered="inline"` will attempt to render the content inline.
+  - `rendered="code"` will render the content as a code block. When used with samples, the language will be derived from the sample file's extension.
 
 Examples:
 
@@ -431,6 +504,44 @@ While they may seem similar, remixes and inclusions have different use cases and
 - **Remixes** `{{> ...}}` **will** render the surrounding tag in the final output.
 - **Inclusions** `{{$...}}` are replaced outright and **will not** render the surrounding tag in the final output.
 
+### Samples
+
+Samples are reusable content, stored in the `/_samples` directory. They can be written in Mixdown syntax, Markdown, or other formats and are intended for use directly within mixes.
+
+- Samples will render as wrapped with `<sample-name>` tags in the final output. This can be disabled by using the `rendered="unwrapped"` attribute.
+
+Example:
+
+```markdown
+<!-- Sample: `/_samples/remember.md` -->
+1. Always follow the code conventions.
+2. Never commit directly to `main`
+3. Use conventional commit messages.
+
+---
+
+<!-- Mix: `my-rules.md` -->
+# My Rules
+
+...rest of mix content...
+
+{{> @remember}}
+
+---
+
+<!-- Rendered output: `.cursor/rules/my-rules.mdc` -->
+
+# My Rules
+
+...rest of rules file...
+
+<remember>
+1. Always follow the code conventions.
+2. Never commit directly to `main`
+3. Use conventional commit messages.
+</remember>
+```
+
 ### Rendering Raw Mixdown Syntax
 
 Triple-brace `{{{...}}}` to skip processing of the content and render it in the raw Mixdown syntax.
@@ -441,10 +552,10 @@ Triple-brace `{{{...}}}` to skip processing of the content and render it in the 
 
 ```markdown
 > Triple braces will preserve the Mixdown syntax on render.
-> Adding `no-tag` will remove those section tags from the output.
+> Adding `rendered="unwrapped"` will remove those section tags from the output.
 > Adding `+cursor` will only include the section for the `cursor` target.
 
-{{{examples no-tag +cursor}}}
+{{{examples rendered="unwrapped" +cursor}}}
   {{example}}
   - Instructions
   - Rules
@@ -458,7 +569,7 @@ The above will render (in Cursor only) as:
 - Rules
 {{/example}}
 
-Without the `no-tag` attribute, it would render as:
+Without the `rendered="unwrapped"` attribute, it would render as:
 
 <examples>
   <example>
@@ -506,11 +617,11 @@ Mixdown has specific rules for whitespace to ensure consistent parsing and outpu
   - Whitespace adjacent to brackets is removed on render, while new lines are preserved
 
 ## Code Examples
-<!-- TODO: Pick up from here -->
+
 **Section with attributes:**
 
 ```markdown
-{{instructions \description="Core Rules" +cursor -windsurf}}
+{{instructions \name="core_rules" +cursor -windsurf}}
 All code must follow consistent formatting.
 
 Testing is required for all new features.
@@ -518,7 +629,7 @@ Testing is required for all new features.
 
 Will render in Cursor (but not Windsurf) as:
 
-<instructions description="Core Rules">
+<instructions name="core_rules">
 All code must follow consistent formatting.
 
 Testing is required for all new features.
@@ -528,9 +639,9 @@ Testing is required for all new features.
 **Remixing content:**
 
 ```markdown
-{{> _partials/coding-standards}}
+{{> @coding-standards}}
 
-{{> mix-file#specific-section}}
+{{> my-mix#specific-section}}
 ```
 
 **Using insertions:**
@@ -543,7 +654,7 @@ Version: {{ $.version }}
 **Using raw output:**
 
 ```markdown
-{{{example no-tag}}}
+{{{example rendered="unwrapped"}}}
 To include a section in Mixdown use: {{section-name}}
 {{{/example}}}
 ```
@@ -556,7 +667,7 @@ project/
 │   ├── artifacts/
 │   │   └── builds/         # compiled outputs
 │   ├── instructions/       # Mix files (*.md)
-│   │   └── _partials/      # reusable content
+│   │   └── _samples/       # reusable content
 │   └── mixdown.config.json # compiler config
 ```
 
@@ -580,23 +691,25 @@ The following table provides a complete list of all supported attributes in Mixd
 | Attribute            | Type    | Default    | Section | Remix | Frontmatter | Description |
 |----------------------|---------|------------|---------|-------|--------------|-------------|
 | `name`               | string  | none       | ✅      | ✅    | ✅           | Name or identifier (frontmatter: mix identifier, required) |
-| `description`        | string  | none       | ✅      | ❌    | ✅           | Short description of content |
+| `description`        | string  | none       | ❌      | ❌    | ✅           | Short description of content (frontmatter only) |
 | `+/-target`          | flag    | none       | ✅      | ✅    | ❌           | Include/exclude for specific targets |
-| `no-tag`             | boolean | false      | ✅      | ✅    | ❌           | Skip XML tag wrapping |
+| `rendered`           | string  | "default"  | ✅      | ✅    | ❌           | Controls how content is processed and displayed |
 | `allow-bare-xml-tags`| boolean | false      | ❌      | ❌    | ✅           | Allow using bare XML tags |
 | `sections`           | list    | none       | ❌      | ✅    | ❌           | Filter specific sections in remixes |
 | `version`            | string  | none       | ❌      | ❌    | ✅           | Mix version |
 | `labels`             | array   | `[]`       | ❌      | ❌    | ✅           | Categorization tags |
-| `targets.include`    | array   | `[]`       | ❌      | ❌    | ✅           | Target inclusion list |
-| `targets.exclude`    | array   | `[]`       | ❌      | ❌    | ✅           | Target exclusion list |
-| `globs`              | array   | `[]`       | ✅      | ❌    | ✅           | File patterns for tool-specific support |
-| `alwaysApply`        | boolean | false      | ✅      | ❌    | ✅           | Whether rule should always be applied |
+| `target.include`     | array   | `[]`       | ❌      | ❌    | ✅           | Target inclusion list |
+| `target.exclude`     | array   | `[]`       | ❌      | ❌    | ✅           | Target exclusion list |
+| `target.path`        | string  | none       | ❌      | ❌    | ✅           | Custom output path for artifacts |
+| `globs`              | array   | `[]`       | ❌      | ❌    | ✅           | File patterns for tool-specific support (frontmatter only) |
+| `alwaysApply`        | boolean | false      | ❌      | ❌    | ✅           | Whether rule should always be applied (frontmatter only) |
 | `\key`               | flag    | none       | ✅      | ✅    | ❌           | Include attribute in rendered XML |
 
 **Notes:**
 
 - All string attributes can be target-scoped with `+target?key="value"` syntax
 - Frontmatter target blocks override global values (e.g., `cursor: { description: "..." }`)
+- Target-specific paths can be set with `cursor: { target: { path: "./custom/path" } }`
 - The `\key` flag specifically indicates that the attribute should be included in the XML output
 
 *© 2025 Mixdown contributors – MIT License.*
