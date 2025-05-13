@@ -1,6 +1,6 @@
 # 💽 Mixdown – v0 Overview
 
-> *One prompt. Every tool. Zero drift.*
+> *Write prompts once, render tool-specific rules, zero drift.*
 
 ## Table of Contents
 
@@ -21,6 +21,7 @@
   - [Design Goals](#design-goals)
   - [Sections](#sections)
     - [Section Tag Parsing](#section-tag-parsing)
+    - [Target-scoped attribute overrides](#target-scoped-attribute-overrides)
     - [Multi-line Tags for Readability](#multi-line-tags-for-readability)
     - [Section Attributes](#section-attributes)
   - [Mixdown Frontmatter](#mixdown-frontmatter)
@@ -56,7 +57,7 @@ Mixdown introduces a single source-of-truth rules syntax written in pure Markdow
 2. Uses **tool-specific compilers** (as plugins) to transform the AST into per-tool rules files (artifacts).
 3. Writes per-tool **artifacts** to their respective locations, with the necessary filenames, formats, etc. all accounted for.
 
-Result: *write once, render rules files for any tool, with zero drift.*
+Result: *write instructions once, render rules files for any tool, with zero drift.*
 
 ## Core Concepts
 
@@ -191,6 +192,20 @@ Content A
 </section-one>
 ```
 
+#### Target-scoped attribute overrides
+
+Any string attribute can be given a per-target override by suffixing the target ID with a **`?`** delimiter:
+
+```markdown
+{{instructions title="Important Rules" cursor?title="ImportantCursor Rules"}}
+...
+{{/instructions}}
+```
+
+In this example the section title is "Important Cursor Rules" when compiled for the *cursor* target, and "Important Rules" everywhere else.  The same pattern works with groups once they arrive (e.g. `ide?title="Important IDE Rules"`).
+
+Note: You can also use the `+target` syntax to both include the section for specific targets *and* apply target-specific overrides.
+
 #### Multi-line Tags for Readability
 
 Attributes can be split across lines for readability. The parser preserves this formatting when writing XML tags:
@@ -224,6 +239,8 @@ Renders as:
 | `description` | string | Short blurb retained in rendered XML (if allowed). |
 | `+/-target` | flag | Include/exclude for specific targets (e.g., `+cursor -windsurf`). |
 | `no-tag` | boolean | Skip XML wrapping. |
+| `globs` | list | File glob patterns the rule should match (rewritten per-target when needed). |
+| `alwaysApply` | boolean | Force the rule to apply even when the current file does not match `globs`. |
 | `\key` | flag | Include the attribute in rendered XML. |
 | *Custom* | any | Passed through untouched. |
 
@@ -459,8 +476,7 @@ The following table provides a complete list of all supported attributes in Mixd
 | `title`              | string  | none       | ✅      | ❌    | ❌           | Title for the section |
 | `description`        | string  | none       | ✅      | ❌    | ✅           | Short description of content |
 | `+/-target`          | flag    | none       | ✅      | ✅    | ❌           | Include/exclude for specific targets |
-| `\key`               | flag    | none       | ✅      | ✅    | ❌           | Include attribute in rendered XML |
-| `no-tag`            | boolean | false      | ✅      | ✅    | ❌           | Skip XML tag wrapping |
+| `no-tag`             | boolean | false      | ✅      | ✅    | ❌           | Skip XML tag wrapping |
 | `allow-bare-xml-tags`| boolean | false      | ❌      | ❌    | ✅           | Allow using bare XML tags |
 | `sections`           | list    | none       | ❌      | ✅    | ❌           | Filter specific sections in remixes |
 | `version`            | string  | none       | ❌      | ❌    | ✅           | Mix version |
@@ -469,6 +485,7 @@ The following table provides a complete list of all supported attributes in Mixd
 | `targets.exclude`    | array   | `[]`       | ❌      | ❌    | ✅           | Target exclusion list |
 | `globs`              | array   | `[]`       | ✅      | ❌    | ✅           | File patterns for tool-specific support |
 | `alwaysApply`        | boolean | false      | ✅      | ❌    | ✅           | Whether rule should always be applied |
+| `\key`               | flag    | none       | ✅      | ✅    | ❌           | Include attribute in rendered XML |
 
 **Notes:**
 
