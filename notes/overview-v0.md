@@ -11,7 +11,7 @@
   - [Our Solution](#our-solution)
 - [Core Concepts](#core-concepts)
 - [Key Features](#key-features)
-  - [Mixdown-flavored Markdown](#mixdown-flavored-markdown)
+  - [Mixdown Syntax](#mixdown-syntax)
   - [Compiler \& Integration](#compiler--integration)
 - [Target Providers](#target-providers)
 - [Getting Started](#getting-started)
@@ -20,16 +20,24 @@
 - [Syntax Reference](#syntax-reference)
   - [Design Goals](#design-goals)
   - [Sections](#sections)
+    - [Section Tags Syntax](#section-tags-syntax)
+    - [Section Tag Names](#section-tag-names)
     - [Section Tag Parsing](#section-tag-parsing)
     - [Target-scoped attribute overrides](#target-scoped-attribute-overrides)
     - [Multi-line Tags for Readability](#multi-line-tags-for-readability)
     - [Section Attributes](#section-attributes)
+    - [Using bare XML tags](#using-bare-xml-tags)
   - [Mixdown Frontmatter](#mixdown-frontmatter)
-  - [Placeholder Instructions](#placeholder-instructions)
-  - [Insertions](#insertions)
   - [Links](#links)
+    - [External \& Mixdown File Internal Links](#external--mixdown-file-internal-links)
+    - [Linking to Project Files](#linking-to-project-files)
+  - [Insertions](#insertions)
   - [Remixes](#remixes)
     - [Remix Attributes](#remix-attributes)
+  - [Remixes vs. Inclusions](#remixes-vs-inclusions)
+  - [Rendering Raw Mixdown Syntax](#rendering-raw-mixdown-syntax)
+  - [Instruction Placeholders](#instruction-placeholders)
+    - [Placeholder Formatting](#placeholder-formatting)
   - [Whitespace Handling](#whitespace-handling)
 - [Code Examples](#code-examples)
 - [Directory Structure](#directory-structure)
@@ -57,40 +65,54 @@ Mixdown introduces a single source-of-truth rules syntax written in pure Markdow
 2. Uses **tool-specific compilers** (as plugins) to transform the AST into per-tool rules files (artifacts).
 3. Writes per-tool **artifacts** to their respective locations, with the necessary filenames, formats, etc. all accounted for.
 
-Result: *write instructions once, render rules files for any tool, with zero drift.*
+Result: *Write prompts once, render tool-specific rules, zero drift.*
 
 ## Core Concepts
 
-**Mix**
-: Source Markdown instructions files that are compiled into tool-specific artifacts.
-
-**Artifacts**
-: Target-specific output files (e.g., `.cursor/rules/project-conventions.mdc`, `./conventions.md`, etc.) rendered from the source mix.
-
-**Sections**
-: Delimited (and reusable/repurposeable) blocks of content with optional attributes, written as Markdown-compliant 1:1 translations of XML tags (e.g., `{{instructions}}...{{/instructions}}`).
-
-**Remix**
-: Re-usable content inclusion mechanism (`{{> my-partial }}`) that can incorporate content from another mix/section/partial/template.
-
-**Insertions**
-: Dynamic values replaced inline at build time (`{{ $target }}`, `{{ $alias }}`, `{{ $.frontmatter.key }}`).
-
-**Target**
-: A supported tool (e.g. `cursor`, `windsurf`, `claude-code`), provided by plugins, which define tool-specific criteria for compiling mixes to rules files.
+- **Mix**
+  - Source instruction files, written in 100% previewable Markdown.
+  - Written in Mixdown Syntax and use `{{...}}` tags to direct the compiler.
+  - Compiled into tool-specific rules files:
+    - `./mixdown/instructions/my-rule.md` → `.cursor/rules/my-rule.mdc`
+- **Target**
+  - A supported tool, such as `cursor`, `windsurf`, or `claude-code`.
+  - Defines tool-specific criteria for compiling mixes to rules files.
+  - Provided through plugins.
+- **Artifact**
+  - Target-specific (tool) output files, rendered from the source mix.
+  - Examples for a mix called `project-conventions.md`:
+    - Cursor → `.cursor/rules/project-conventions.mdc`
+    - Claude Code → `./CLAUDE.md#project-conventions`
+    - OpenAI Codex → `./conventions.md`.
+- **Tag**
+  - Syntax: `{{...}}`
+  - Used throughout Mixdown to direct the compiler.
+  - Similar to `<xml-tags>`, but fully Markdown-previewable.
+- **Section**
+  - Syntax: `{{instructions}}...{{/instructions}}`
+  - Delimited, reusable blocks of content with optional attributes.
+  - 1:1 translations of XML tags, but readable in Markdown previewers
+    - `{{instructions}}` → `<instructions>`
+- **Remix**
+  - Syntax: `{{> my-rule }}`
+  - Embed content from another mix, section, partial, or template.
+- **Insertion**
+  - Syntax: `{{$key}}` or `$key` if used within a `{{...}}` tag.
+  - Dynamic values replaced inline at build time.
+  - Examples: `{{$target}}`, `{{$.frontmatter.key}}`, `{{$alias}}`
 
 ## Key Features
 
-### Mixdown-flavored Markdown
+### Mixdown Syntax
 
-- **100% Preview-able Markdown** – Renders cleanly in GitHub, VS Code, etc.; passes markdown-lint.
-- **Granular Sections** – Filter sections within a single mix for per-target inclusion/exclusion.
-- **Build-time Insertions** – Aliases and frontmatter data injection.
+- **100% Preview-able Markdown:** Renders cleanly in GitHub, VS Code, etc.; passes markdown-lint.
+- **Granular Sections:** Filter sections within a single mix for per-target inclusion/exclusion.
+- **Build-time Insertions:** Aliases and frontmatter data injection.
 
 ### Compiler & Integration
 
-- **Plugin Architecture** – Add new targets via `MixdownPluginProvider` without touching core.
-- **CLI & API** – `mixdown build`, `mixdown validate`, and `POST /compile` endpoint.
+- **Plugin Architecture:** Add new targets via `MixdownPluginProvider` without touching core.
+- **CLI & API:** `mixdown build`, `mixdown validate`, and `POST /compile` endpoint.
 
 ## Target Providers
 
@@ -108,20 +130,21 @@ Result: *write instructions once, render rules files for any tool, with zero dri
 ### Installation
 
 ```bash
-npm install -g mixdown        # global CLI
-# or project-local
-npm install --save-dev mixdown
+npm install -g @mixdown/cli        # global CLI
+# project-local
+npm install --save-dev @mixdown
+# or with the CLI
+npx @mixdown/cli init
 ```
 
 ### Quick Start
 
 ```bash
-mixdown init          # scaffolds .mixdown/ directory structure
-cd .mixdown/instructions
-echo "---\ndescription: Rules for this project\n---\n{{system}}Hi!{{/system}}" > my-rule.md
-cd ../..
+mixdown init      # scaffolds .mixdown/ directory structure
 
-mixdown build         # writes artifacts to .mixdown/artifacts/
+mixdown import    # imports existing rules files into the mixdown format
+
+mixdown build     # writes artifacts to .mixdown/artifacts/
 ```
 
 ## Syntax Reference
@@ -145,19 +168,15 @@ Sections are the core building block of Mixdown and are a direct stand in for XM
 {{/instructions}}
 ```
 
-- **Section Tags Syntax**:
-  - **1:1 Markdown-to-XML Translation** – Write sections as `{{section-name}}` and they will render as `<section_name>` in the output.
-  - **Open/Close** `{{section-name ... }}` [ section content ] `{{/section-name}}`
-- **Section Tag Names**:
-  - `kebab-case` is recommended for section names (to avoid accidental Markdown emphasis rendering)
-  - Regardless of the naming convention, XML tag names in artifacts will render as `<snake_case>` (which is configurable)
-- **Multi-line Tags** are allowed for readability, and the parser preserves this formatting:
+#### Section Tags Syntax
 
-```markdown
-{{instructions
-  description="Critical instructions for all agents."
-}}
-```
+- **1:1 Markdown-to-XML Translation**: Write sections as `{{section-name}}` and they will render as `<section_name>` in the output.
+- **Open/Close** `{{section-name ... }}` [ section content ] `{{/section-name}}`
+
+#### Section Tag Names
+
+- `kebab-case` is recommended for section names (to avoid accidental Markdown emphasis rendering)
+- Regardless of the naming convention, XML tag names in artifacts will render as `<snake_case>` (which is configurable)
 
 #### Section Tag Parsing
 
@@ -211,6 +230,7 @@ Attributes can be split across lines for readability. The parser preserves this 
 
 ```markdown
 <!-- Multi-line section tag in Mixdown format -->
+
 {{instructions
   description="Rules"
   \description="These are the rules for the instructions section."
@@ -218,12 +238,12 @@ Attributes can be split across lines for readability. The parser preserves this 
 This is the content of the instructions section.
 {{/instructions}}
 
-<!-- Note: Including the `\` backslash prefix tells Mixdown to preserve the attribute on render -->
+<!-- Note: Including the `\` backslash prefix tells
+  Mixdown to preserve the attribute on render -->
 
 ---
 
-Renders as:
-<!-- XML output -->
+Output renders as:
 <instructions
   description="These are the rules for the instructions section.">
   This is the content of the instructions section.
@@ -237,17 +257,17 @@ Renders as:
 | `description` | string | Short blurb retained in rendered XML (if allowed). |
 | `+/-target` | flag | Include/exclude for specific targets (e.g., `+cursor -windsurf`). |
 | `no-tag` | boolean | Skip XML wrapping. |
+| `\key` | flag | Include the attribute in rendered XML. |
 | `globs` | list | File glob patterns the rule should match (rewritten per-target when needed). |
 | `alwaysApply` | boolean | Force the rule to apply even when the current file does not match `globs`. |
-| `\key` | flag | Include the attribute in rendered XML. |
 | *Custom* | any | Passed through untouched. |
 
-**Using bare XML tags:**
-
-When `allow-bare-xml-tags` is set to `true` in frontmatter or `.mixdown.config.json`, you can use bare XML tags for section names. The artifacts will be rendered verbatim, but note:
+#### Using bare XML tags
 
 > [!WARNING]
 > Bare XML tags are not valid Markdown, so Markdown previewers may be likely to render them differently or not at all.
+
+When `allow-bare-xml-tags` is set to `true` in frontmatter or `.mixdown.config.json`, you can use bare XML tags for section names. The artifacts will be rendered verbatim, but note:
 
 ```markdown
 <!-- XML tags with `allow-bare-xml-tags` set to `true` -->
@@ -301,75 +321,55 @@ Frontmatter is used to provide metadata about the mix file and control how it's 
 - `labels`: Categorization tags
 - `[cursor|windsurf|claude-code|...]`: Target-specific key/value pairs
 
-### Placeholder Instructions
-
-When writing prompts or instructions, you can use placeholders as self-contained prompts to direct an AI to fill in. Mixdown supports both single-bracket `[placeholder text]` or single-brace `{placeholder text}` syntax.
-
-- ✅ Do this:
-  - `[requirements]`
-  - `{requirements}`
-- ❌ Don't do this:
-  - `[[requirements]]`
-  - `{{requirements}}`
-  - `<requirements>`
-
-> [!IMPORTANT]
-> Remember, placeholder values should be simply considered instructions for the AI, and the output may not always be exactly what you expect. They're probabalistic, not deterministic.
-
-Feel free to experiment with different language choice, formats, and even attributes to see what works best for your use case. Examples:
-
-```markdown
-[requirements|Title Case]
-[requirements format="Title Case"]
-[requirements in Title Case]
-```
-
-### Insertions
-
-Insertions are dynamic values that are replaced inline at build time.
-
-| Type | Syntax | Notes |
-|------|--------|-------|
-| **Alias** | `{{ $name }}` | Alias lookup in `.mixdown.config.json` under `aliases` key. |
-| **Frontmatter value** | `{{ $.key }}` | Access values from thecurrent file's frontmatter. |
-
-**Built-in System Insertions**:
-
-- `{{ $target }}` → current target ID in kebab-case (`cursor`, `claude-code`, etc.)
-- `{{ $target.name }}` → display name from the provider manifest (e.g. `Cursor`, `Claude Code`, etc.)
-
-**Raw Output:** 
-
-Triple-brace `{{{...}}}` to skip processing of the content and render it in the raw Mixdown syntax.
-
-- This is useful for writing documentation or rules that need to show Mixdown-flavored Markdown (mix.md) literally
-- Wrapping a section in triple curly braces preserves all Mixdown syntax and content exactly as written
-- Example:
-
-```markdown
-{{{example no-tag +cursor}}}
-  {{instructions}}
-{{{/example}}}
-```
-
 ### Links
 
-Standard Markdown links work as expected:
+#### External & Mixdown File Internal Links
+
+Standard Markdown links work as expected external links, and links to other mix files:
 
 - Regular links: `[Text](url)`
 - Links to other mix files: `[Text](other-mix.md)`
-- Links to project files: `[Text](/path/to/file.js)`
 
-You can also use the Mixdown link syntax:
+Mixdown also provides a `{{link}}` tag to allow for more expressive link syntax.
 
 ```markdown
 {{link mix-name}}
 {{link ["Link Title"] mix-name}}
 ```
 
+> [!NOTE]
+> Standard Markdown links will work in previews as expected within the `.mixdown/instructions` directory, but `{{link ...}}` will not.
+
+#### Linking to Project Files
+
+Linking to project files is done with with the link tag and a relative path to the project root, starting with a `/`:
+
+```markdown
+{{link ["Link Title"] /path/to/file.ts}}
+
+The above will render as a link relative to the compiled artifact's directory. For example, if the compiled artifact is written to `.cursor/rules/project-conventions.mdc`, the link will be rendered as:
+
+[Link Title](../../path/to/file/.ts)
+```
+
+### Insertions
+
+Insertions are dynamic values using the `{{$...}}` syntax. They are replaced inline at build time.
+
+| Type | Syntax | Notes |
+|------|--------|-------|
+| **Alias** | `{{$key}}` | Alias lookup in `.mixdown.config.json` under `aliases` key. |
+| **Frontmatter value** | `{{$.key}}` | Access values from thecurrent file's frontmatter. |
+| **Target** | `{{$target}}` or `{{$target.id}}` | Display name from the provider manifest (e.g. `Cursor`, `Claude Code`). The current target ID in kebab-case can be accessed by adding `.id` to the end (`cursor`, `claude-code`). |
+
+**Built-in System Insertions**:
+
+- `{{$target}}` → display name from the provider manifest (e.g. `Cursor`, `Claude Code`, etc.)
+- `{{$target.id}}` → current target ID in kebab-case (`cursor`, `claude-code`, etc.)
+
 ### Remixes
 
-Remixes allow you to embed reusable content (partials), mixes, or mix sections in rendered artifacts. They are denoted by the `{{> ...}}` syntax.
+Remixes allow you to reuse content across multiple mixes by embedding partials, mixes, or sections within a mix into rendered artifacts. They are denoted by the `{{> ...}}` syntax.
 
 ```markdown
 <!-- Embed /_partials/legal.md -->
@@ -385,12 +385,115 @@ Remixes allow you to embed reusable content (partials), mixes, or mix sections i
 {{> my-rules sections="section-name,!section-name-to-exclude"}}
 ```
 
+Example:
+
+Let's say that we have a mix file called `conventions.md` that contains a section called `style-guide`. We can remix it into another mix file called `my-rules.md` and include only the `style-guide` section:
+
+```markdown
+<!-- my-rules.md -->
+Important: Be sure to follow the style guide:
+
+{{> conventions#style-guide}}
+
+---
+
+The above will render as:
+
+Important: Be sure to follow the style guide:
+
+<style_guide>
+  ( contents of #conventions.md#style-guide )
+</style_guide>
+```
+
 #### Remix Attributes
 
-| Attribute | Purpose |
-|-----------|---------|
-| `sections` | Filter specific sections with include/exclude pattern. |
-| Other section attributes | All section attributes can be applied to remixes. |
+All [section attributes](#section-attributes) can be applied to remixes. An additional `sections` attribute is available to filter specific sections by name and include/exclude them on render.
+
+Examples:
+
+```markdown
+{{> my-rules sections="!less-important-considerations"}}
+
+<!-- 👆 This would include all sections from `my-rules.md`
+     except for `less-important-considerations`. -->
+
+{{> my-rules sections="important-considerations"}}
+
+<!-- 👆 This would include only the `important-considerations`
+     section from `my-rules.md`. -->
+```
+
+### Remixes vs. Inclusions
+
+While they may seem similar, remixes and inclusions have different use cases and will be interpreted differently by the compiler:
+
+- **Remixes** `{{> ...}}` **will** render the surrounding tag in the final output.
+- **Inclusions** `{{$...}}` are replaced outright and **will not** render the surrounding tag in the final output.
+
+### Rendering Raw Mixdown Syntax
+
+Triple-brace `{{{...}}}` to skip processing of the content and render it in the raw Mixdown syntax.
+
+- This is useful for writing documentation or rules that need to show Mixdown-flavored Markdown (mix.md) literally
+- Wrapping a section in triple curly braces preserves all Mixdown syntax and content exactly as written
+- Example:
+
+```markdown
+> Triple braces will preserve the Mixdown syntax on render.
+> Adding `no-tag` will remove those section tags from the output.
+> Adding `+cursor` will only include the section for the `cursor` target.
+
+{{{examples no-tag +cursor}}}
+  {{example}}
+  - Instructions
+  - Rules
+  {{/example}}
+{{{/examples}}}
+
+The above will render (in Cursor only) as:
+
+{{example}}
+- Instructions
+- Rules
+{{/example}}
+
+Without the `no-tag` attribute, it would render as:
+
+<examples>
+  <example>
+    - Instructions
+    - Rules
+  </example>
+</examples>
+```
+
+### Instruction Placeholders
+
+When writing prompts or instructions, you can use placeholders as self-contained prompts to direct an AI to fill in. Mixdown recommends using single-bracket `[placeholder text]`, but single-brace `{placeholder text}` syntax is supported. Just be careful, as one extra brace will cause the compiler to treat it as a Mixdown tag.
+
+- ✅ Do this:
+  - `[requirements]` / `[ requirements ]`
+  - `{requirements}` / `{ requirements }`
+- ❌ Don't do this:
+  - `[[requirements]]`
+  - `{{requirements}}`
+  - `<requirements>`
+
+> [!IMPORTANT]
+> Remember, placeholder values should be simply considered instructions for the AI, and the output may not always be exactly what you expect. They're probabilistic, not deterministic.
+
+#### Placeholder Formatting
+
+Feel free to experiment with different language choice, formats, and even attributes to see what works best for your use case:
+
+```markdown
+[requirements|Title Case]
+[requirements format="Title Case"]
+[requirements in Title Case]
+```
+
+While the AI may not always follow the instructions in the placeholder precisely, it's worth experimenting.
 
 ### Whitespace Handling
 
@@ -398,9 +501,9 @@ Mixdown has specific rules for whitespace to ensure consistent parsing and outpu
 
 - Space after opening `{{` and before closing `}}` is optional
   - Example: `{{instructions}}` is equivalent to `{{ instructions }}`
-- Attributes must be separated by spaces or newlines
 - No spaces are allowed around the `=` sign in attribute declarations
-- Whitespace adjacent to brackets is removed on render, while new lines are preserved
+- Attributes must be separated by spaces or newlines
+  - Whitespace adjacent to brackets is removed on render, while new lines are preserved
 
 ## Code Examples
 <!-- TODO: Pick up from here -->
@@ -412,6 +515,14 @@ All code must follow consistent formatting.
 
 Testing is required for all new features.
 {{/instructions}}
+
+Will render in Cursor (but not Windsurf) as:
+
+<instructions description="Core Rules">
+All code must follow consistent formatting.
+
+Testing is required for all new features.
+</instructions>
 ```
 
 **Remixing content:**

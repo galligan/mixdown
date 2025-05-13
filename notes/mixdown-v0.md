@@ -97,7 +97,7 @@ Below is a list of changes that will override previous behavior detailed in the 
         - Note: `[My Link Title](my-rule.md)` is still valid, and will continue to work.
     - ✅ **Adding:** `{{link ["My Link Title"] /path/to/file.md }}` as the syntax for linking to project files, starting from the project root.
         - ✴️ **Replacing:** `[My Project File](//src/file.ts)`
-            - The double slash is just confusing, and would have produced invalid links anyways.
+        - The double slash is just confusing, and would have produced invalid links anyways.
 - Embeds
     - ✅ **Adding:** `{{> mix-name }}`
         - This takes the place of partials, and keeps the syntax simpler for embedding mixes.
